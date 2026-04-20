@@ -169,34 +169,33 @@ export function DropdownMenu({
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 top-full z-40 mt-1 min-w-[12rem] overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
         >
-          <ul className="flex flex-col py-1">
+          <div className="flex flex-col py-1">
             {items.map((item, index) => {
               const Icon = item.icon;
               const destructiveClass = item.destructive
                 ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40'
                 : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700';
               return (
-                <li key={item.label} role="none">
-                  <button
-                    ref={(el) => {
-                      itemRefs.current[index] = el;
-                    }}
-                    type="button"
-                    role="menuitem"
-                    tabIndex={index === activeIndex ? 0 : -1}
-                    onClick={() => handleSelect(item)}
-                    className={
-                      'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ' +
-                      destructiveClass
-                    }
-                  >
-                    {Icon && <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />}
-                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  </button>
-                </li>
+                <button
+                  key={item.label}
+                  ref={(el) => {
+                    itemRefs.current[index] = el;
+                  }}
+                  type="button"
+                  role="menuitem"
+                  tabIndex={index === activeIndex ? 0 : -1}
+                  onClick={() => handleSelect(item)}
+                  className={
+                    'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ' +
+                    destructiveClass
+                  }
+                >
+                  {Icon && <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />}
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                </button>
               );
             })}
-          </ul>
+          </div>
         </div>
       )}
     </div>

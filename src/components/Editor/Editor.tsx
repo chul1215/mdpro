@@ -38,6 +38,7 @@ function buildExtensions(themeCompartment: Compartment, theme: Theme): Extension
     ]),
     markdown({ base: markdownLanguage, codeLanguages: languages }),
     EditorView.lineWrapping,
+    EditorView.contentAttributes.of({ 'aria-label': '마크다운 편집기' }),
     themeCompartment.of(theme === 'dark' ? darkTheme : lightTheme),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {

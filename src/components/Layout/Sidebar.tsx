@@ -73,6 +73,7 @@ export function Sidebar() {
         className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
       />
       <aside
+        role="navigation"
         aria-label="문서 목록"
         className="absolute left-0 top-12 z-40 flex h-[calc(100%-3rem)] w-64 flex-col border-r border-slate-200 bg-slate-50 shadow-lg md:static md:top-0 md:h-full md:w-56 md:shadow-none dark:border-slate-700 dark:bg-slate-950"
       >
@@ -123,7 +124,7 @@ export function Sidebar() {
                         <span className="min-w-0 flex-1 truncate">
                           {displayTitle}
                         </span>
-                        <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
+                        <span className="shrink-0 text-[10px] text-slate-600 dark:text-slate-300">
                           {formatRelativeTime(doc.updatedAt)}
                         </span>
                       </button>

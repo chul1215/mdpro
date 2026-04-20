@@ -19,12 +19,17 @@ const prefersDark = () =>
   typeof window !== 'undefined' &&
   window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 
+// md 미만에서는 사이드바가 오버레이로 렌더되므로 첫 방문 시 닫힘이 UX상 자연스럽다.
+const prefersMobile = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(max-width: 767px)').matches;
+
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
       theme: prefersDark() ? 'dark' : 'light',
       viewMode: 'split',
-      sidebarOpen: true,
+      sidebarOpen: !prefersMobile(),
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),

@@ -15,14 +15,14 @@ MDPro는 초보자도 쉽게 쓸 수 있는 브라우저 기반 마크다운 에
 > 다음 작업: Phase N+1 — <무엇을 할 예정인가>
 ```
 
-### 전체 프로젝트 현황 (최종 갱신 2026-04-20 · Phase 6 완료, Phase 7은 다음 세션 예정)
+### 전체 프로젝트 현황 (최종 갱신 2026-04-20 · Phase 7 완료 — 전체 로드맵 종료)
 
-- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃) · Phase 2 (CodeMirror 에디터) · Phase 3 (unified 프리뷰 파이프라인) · Phase 4 (서식 툴바 · view registry · Mod-b/i) · Phase 5 (IndexedDB 다중 문서 · 자동 저장 · 사이드바 · 제목 자동 추출) · Phase 6 (.md/.html 내보내기 · .md 가져오기(파일 선택/드래그 앤 드롭) · 파일 메뉴 드롭다운)
-- **작업 트리 상태**: Phase 6 단일 커밋 예정. 변경/신규: `src/lib/export/{markdown,html,import,styles}.ts` 신설, `src/types/raw.d.ts` 신설(?raw 타입), `documentStore.createDocument(init?)` 확장, `src/components/Menu/DropdownMenu.tsx` 신설, `src/components/Layout/{FileMenu,DropOverlay}.tsx` 신설, `TopBar`/`Layout` 통합, CLAUDE.md 갱신.
-- **현재 소스 상태**: `src/lib/export/markdown.ts`(Blob+a click 다운로드 + 파일명 sanitize), `html.ts`(파이프라인→Mermaid SVG 인라인→이미지 base64 시도→독립형 HTML 문서 조립), `styles.ts`(KaTeX+hljs CSS `?raw` + 자체 타이포그래피), `import.ts`(File→extractTitle 또는 파일명 fallback, 5MB 제한). `DropdownMenu`는 role=menu + roving focus + ESC/외부 클릭 닫기. `FileMenu`는 export 모듈을 **동적 import**하여 메인 번들에서 파이프라인/CSS 제외. `DropOverlay`는 window 레벨 dragenter/leave counter + dataTransfer.types.includes('Files') 판정.
-- **직전 작업**: Phase 6 — lazy-import로 번들 다이어트(직접 정적 import 시 438KB gzipped → 동적 import 적용 후 246KB gzipped로 복귀, Phase 5 대비 +4KB). HTML export는 오프스크린 `<div>`에 innerHTML 주입 후 `renderMermaidBlocks`로 SVG 치환, `<img>` 순회로 fetch→base64 시도(CORS/실패 시 원본 유지), `<!doctype html>` + `<meta charset>` + 인라인 `<style>` 감싸기. KaTeX 폰트는 woff2 경로 미해결로 브라우저 기본 fallback(허용). 파일명 sanitize는 `<>:"/\|?*` + 제어문자 → `_`, 앞뒤 공백/점 제거, 100자 제한. 가져오기는 항상 새 문서 생성(활성 덮어쓰기 X), 파일명(확장자 제외)을 fallback 제목으로. `DropOverlay`에서 `DataTransfer.types`는 TS DOM lib에서 `readonly string[]`이므로 `Array.from().includes()` 사용(DOMStringList 캐스팅 금지). **단위 175/175 통과**(export 24 + DropdownMenu 6 + FileMenu 5 + DropOverlay 4 + documentStore +3 추가), E2E 1/1, 빌드 메인 **246KB gzipped**.
-- **다음 작업 (Phase 7, 새 세션)**: 최종 검증. 모바일 반응형 스모크(뷰포트 320~768 체크), 접근성 감사(키보드 only 시나리오, 스크린 리더 레이블 누락), E2E 시나리오 확대(문서 생성→편집→전환→내보내기/가져오기 왕복), 성능 점검(대용량 문서 렌더/저장 지연), README/라이선스 정리, 배포 파이프라인(정적 호스팅 — Vercel/Netlify/Cloudflare Pages 중 택일).
-- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → 3 프리뷰 → 4 서식 툴바 → 5 문서 저장소 → 6 내보내기/가져오기 → **7 최종 검증(다음)**.
+- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃) · Phase 2 (CodeMirror 에디터) · Phase 3 (unified 프리뷰 파이프라인) · Phase 4 (서식 툴바) · Phase 5 (IndexedDB 다중 문서) · Phase 6 (.md/.html 내보내기 + .md 가져오기) · Phase 7 (E2E 확대 · 접근성 자동 감사 · README/LICENSE · Cloudflare Pages 배포 설정 · 수동 검증 체크리스트)
+- **작업 트리 상태**: Phase 7 단일 커밋 예정. 변경/신규: `@axe-core/playwright` devDep 추가, `e2e/{a11y,roundtrip,mobile}.spec.ts` 신설, `README.md` 신설, `LICENSE` 신설, `docs/manual-checklist.md` 신설, `public/_redirects` 신설(SPA fallback), `package.json`에 `license: MIT`. 접근성 위반 수정: `DropdownMenu` `<ul><li role="none">` → `<div role="menu">` 직자식으로 평탄화, Sidebar timestamp 색상 대비 강화(slate-500 → slate-600), `Sidebar <aside>`에 `role="navigation"` 명시, CodeMirror `cm-content`에 `aria-label="마크다운 편집기"` (EditorView.contentAttributes). 모바일 첫 방문 UX 개선: `uiStore.sidebarOpen` 기본값을 `matchMedia('(max-width: 767px)')` 감지로 분기.
+- **현재 소스 상태**: E2E 8 시나리오(smoke/a11y × 2/roundtrip × 3/mobile × 2). axe-core 감사가 두 상태(초기/메뉴 open)에서 WCAG 2.1 AA 위반 0 검증. roundtrip은 새 문서→편집→제목 자동 추출(debounce 대기)→전환→삭제 모달 확정 + md/html 다운로드 이벤트 수신.
+- **직전 작업**: Phase 7 — axe 감사 초기 실행에서 3 위반 발견·수정: `aria-input-field-name`(CodeMirror aria-label), `color-contrast`(Sidebar timestamp), `list`(DropdownMenu `<ul>` 구조). Sidebar 역할은 semantic하게 `<aside role="navigation">`로 승격해 E2E selector와 일치. 모바일 375px 뷰포트 테스트는 사이드바 backdrop이 파일 메뉴 클릭을 가로채는 문제를 발견해 `uiStore` 기본값을 모바일 분기로 변경(persist 있어 재방문자 선택은 유지). Cloudflare Pages: `public/_redirects`에 `/* /index.html 200`로 SPA fallback, Vite 프리셋 자동 감지. **단위 175/175 통과**, **E2E 8/8 통과**, 빌드 메인 **245.69KB gzipped** 유지.
+- **향후 유지보수**: 수동 검증 체크리스트는 `docs/manual-checklist.md` 참조. 릴리스 후보마다 실기·스크린 리더·대용량 문서 성능 스팟체크를 수행할 것. 신규 페이즈가 필요해지면 이 블록 하단에 추가.
+- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → 3 프리뷰 → 4 서식 툴바 → 5 문서 저장소 → 6 내보내기/가져오기 → **7 최종 검증(완료)**.
 - **원격 저장소**: https://github.com/chul1215/mdpro (public, `main` → `origin/main`). 최초 푸시 커밋은 `e2e5dd6` (Phase 0~2 스냅샷).
 
 ## Commands
@@ -47,8 +47,8 @@ npx vitest run src/stores/uiStore.test.ts
 npx vitest run -t "toggles theme"   # 테스트 이름 필터
 ```
 
-> 직전 작업: Phase 6 완료 시 `npm run check` 175/175 통과, `npm run build` 성공(메인 246KB gzipped, +4KB), `npm run dev`/`npm run preview` HTTP 200, `npm run test:e2e` 1/1.
-> 다음 작업: Phase 7 완료 시 동일 세트 재실행. 추가로 모바일 뷰포트/다크모드/키보드 only 접근성 수동 확인, 대용량 문서(>1MB) 입력 시 debounce save 성능 체크.
+> 직전 작업: Phase 7 완료 시 `npm run check` 175/175, `npm run build` 성공(메인 245.69KB gzipped), `npm run test:e2e` 8/8(smoke/a11y/roundtrip/mobile). axe-core로 WCAG 2.1 AA 위반 0 검증.
+> 다음 작업: 신규 기능 추가 시 E2E 시나리오와 axe 감사 범위를 확장. 수동 항목은 `docs/manual-checklist.md`.
 
 ## Architecture
 
