@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useUIStore, type ViewMode } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
+import { FileMenu } from './FileMenu';
 
 type ViewModeOption = {
   value: ViewMode;
@@ -88,6 +89,8 @@ export function TopBar() {
           );
         })}
       </div>
+
+      <FileMenu />
 
       <button
         type="button"

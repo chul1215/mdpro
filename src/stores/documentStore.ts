@@ -19,7 +19,7 @@ type DocumentState = {
   loading: boolean;
 
   hydrate: () => Promise<void>;
-  createDocument: () => Promise<string>;
+  createDocument: (init?: { title?: string; content?: string }) => Promise<string>;
   switchTo: (id: string) => Promise<void>;
   removeDocument: (id: string) => Promise<void>;
   setContent: (content: string) => void;
@@ -118,20 +118,33 @@ export const useDocumentStore = create<DocumentState>()(
         set({ loading: false });
       },
 
-      createDocument: async () => {
+      createDocument: async (init) => {
         await flushPending();
-        const record = await idbCreateDocument({});
+        // title 미지정 + content 제공 시 H1에서 자동 추출해 idb 어댑터에 전달하면
+        // 저장 레코드 / 목록 요약이 일관된 제목을 갖는다.
+        const resolvedInit = {
+          content: init?.content,
+          title:
+            init?.title ??
+            (init?.content !== undefined
+              ? extractTitleFromMarkdown(init.content)
+              : undefined),
+        };
+        const record = await idbCreateDocument(resolvedInit);
         const summary: DocumentSummary = {
           id: record.id,
           title: record.title,
           updatedAt: record.updatedAt,
         };
         clearTimer();
+        // 저장된 content로부터 다시 auto 제목을 계산해 수동 여부 판정.
+        // (idb 기본값 "# 제목 없음\n\n"도 동일 경로로 처리된다.)
+        const auto = extractTitleFromMarkdown(record.content);
         set((s) => ({
           activeId: record.id,
           title: record.title,
           content: record.content,
-          titleManual: false,
+          titleManual: record.title !== auto,
           documents: [summary, ...s.documents.filter((d) => d.id !== record.id)],
         }));
         return record.id;

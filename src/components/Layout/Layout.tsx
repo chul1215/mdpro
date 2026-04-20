@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { EditorPane } from './EditorPane';
 import { PreviewPane } from './PreviewPane';
 import { Toolbar } from '../Toolbar/Toolbar';
+import { DropOverlay } from './DropOverlay';
 
 export function Layout() {
   const viewMode = useUIStore((s) => s.viewMode);
@@ -20,6 +21,7 @@ export function Layout() {
           {viewMode !== 'edit' && <PreviewPane />}
         </main>
       </div>
+      <DropOverlay />
     </div>
   );
 }

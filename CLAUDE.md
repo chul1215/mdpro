@@ -15,14 +15,14 @@ MDPro는 초보자도 쉽게 쓸 수 있는 브라우저 기반 마크다운 에
 > 다음 작업: Phase N+1 — <무엇을 할 예정인가>
 ```
 
-### 전체 프로젝트 현황 (최종 갱신 2026-04-20 · Phase 5 완료, Phase 6은 다음 세션 예정)
+### 전체 프로젝트 현황 (최종 갱신 2026-04-20 · Phase 6 완료, Phase 7은 다음 세션 예정)
 
-- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃) · Phase 2 (CodeMirror 에디터) · Phase 3 (unified 프리뷰 파이프라인) · Phase 4 (서식 툴바 · view registry · Mod-b/i) · Phase 5 (IndexedDB 다중 문서 · 자동 저장 · 사이드바 문서 목록 · 삭제 확인 모달 · 제목 자동 추출)
-- **작업 트리 상태**: Phase 5 단일 커밋 예정. 변경/신규: `documentStore` 재작성, `src/lib/storage/` 신설(idb 어댑터), `src/lib/markdown/title.ts` 신설, `src/components/Modal/ConfirmDialog` 신설, `Sidebar` 재작성, `TopBar`에 제목 input, `Editor`에 문서 전환 로직, `App`이 `hydrate()` 호출, `test/setup.ts`에 fake-indexeddb 글로벌 로드.
-- **현재 소스 상태**: `src/lib/storage/documents.ts`(CRUD + `__resetForTests`), `src/stores/documentStore.ts`(activeId만 persist, 800ms debounce save, titleManual 플래그, race-safe flush), `src/components/Modal/ConfirmDialog.tsx`(portal + focus trap + ESC/백드롭 + body scroll lock), `src/components/Layout/Sidebar.tsx`(문서 목록/생성/삭제 모달/상대시간/모바일 자동 닫기). Editor는 `activeId` 변경 시 `view.setState`로 undo 히스토리 격리, 동일 id에서 content 변경은 `dispatch`.
-- **직전 작업**: Phase 5 — `idb` 기반 `documents` 스토어(DB `mdpro` v1, keyPath `id`, updatedAt 인덱스). `documentStore`는 persist로 `activeId`만 보존하고 문서 전환 시 진행 중 debounce save를 flush 후 `getDocument` 로드. `setContent`는 titleManual=false일 때 `extractTitleFromMarkdown`으로 제목 자동 갱신(코드펜스 내부 스킵, 첫 ATX H1만 매칭, 없으면 "제목 없음"). `ConfirmDialog`는 2-버튼 포커스 트랩과 ESC/백드롭 취소. Sidebar 내부 section 헤더는 `<div>`로(banner role 중복 방지). **단위 132/132 통과**(storage 8 + documentStore 12 + title 12 + ConfirmDialog 11 + Sidebar 7 + TopBar 7 + Editor 3 추가), E2E 1/1, 빌드 메인 242KB gzipped(+4KB).
-- **다음 작업 (Phase 6, 새 세션)**: 내보내기(`.md`/`.html`) + 가져오기(드래그 앤 드롭/파일 선택). HTML은 완전 독립형(`<meta charset>`, 인라인 CSS, base64 이미지, KaTeX/hljs/Mermaid SVG 인라인화). `.md`는 현재 content Blob 다운로드. 가져오기는 `.md`만 우선. `export-specialist`가 주도하며 `src/lib/export/` 모듈 신설. Phase 3의 파이프라인을 재사용해 HTML 렌더 후 Mermaid SVG 추출→인라인.
-- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → 3 프리뷰 → 4 서식 툴바 → 5 문서 저장소 → **6 내보내기/가져오기(다음)** → 7 최종 검증.
+- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃) · Phase 2 (CodeMirror 에디터) · Phase 3 (unified 프리뷰 파이프라인) · Phase 4 (서식 툴바 · view registry · Mod-b/i) · Phase 5 (IndexedDB 다중 문서 · 자동 저장 · 사이드바 · 제목 자동 추출) · Phase 6 (.md/.html 내보내기 · .md 가져오기(파일 선택/드래그 앤 드롭) · 파일 메뉴 드롭다운)
+- **작업 트리 상태**: Phase 6 단일 커밋 예정. 변경/신규: `src/lib/export/{markdown,html,import,styles}.ts` 신설, `src/types/raw.d.ts` 신설(?raw 타입), `documentStore.createDocument(init?)` 확장, `src/components/Menu/DropdownMenu.tsx` 신설, `src/components/Layout/{FileMenu,DropOverlay}.tsx` 신설, `TopBar`/`Layout` 통합, CLAUDE.md 갱신.
+- **현재 소스 상태**: `src/lib/export/markdown.ts`(Blob+a click 다운로드 + 파일명 sanitize), `html.ts`(파이프라인→Mermaid SVG 인라인→이미지 base64 시도→독립형 HTML 문서 조립), `styles.ts`(KaTeX+hljs CSS `?raw` + 자체 타이포그래피), `import.ts`(File→extractTitle 또는 파일명 fallback, 5MB 제한). `DropdownMenu`는 role=menu + roving focus + ESC/외부 클릭 닫기. `FileMenu`는 export 모듈을 **동적 import**하여 메인 번들에서 파이프라인/CSS 제외. `DropOverlay`는 window 레벨 dragenter/leave counter + dataTransfer.types.includes('Files') 판정.
+- **직전 작업**: Phase 6 — lazy-import로 번들 다이어트(직접 정적 import 시 438KB gzipped → 동적 import 적용 후 246KB gzipped로 복귀, Phase 5 대비 +4KB). HTML export는 오프스크린 `<div>`에 innerHTML 주입 후 `renderMermaidBlocks`로 SVG 치환, `<img>` 순회로 fetch→base64 시도(CORS/실패 시 원본 유지), `<!doctype html>` + `<meta charset>` + 인라인 `<style>` 감싸기. KaTeX 폰트는 woff2 경로 미해결로 브라우저 기본 fallback(허용). 파일명 sanitize는 `<>:"/\|?*` + 제어문자 → `_`, 앞뒤 공백/점 제거, 100자 제한. 가져오기는 항상 새 문서 생성(활성 덮어쓰기 X), 파일명(확장자 제외)을 fallback 제목으로. `DropOverlay`에서 `DataTransfer.types`는 TS DOM lib에서 `readonly string[]`이므로 `Array.from().includes()` 사용(DOMStringList 캐스팅 금지). **단위 175/175 통과**(export 24 + DropdownMenu 6 + FileMenu 5 + DropOverlay 4 + documentStore +3 추가), E2E 1/1, 빌드 메인 **246KB gzipped**.
+- **다음 작업 (Phase 7, 새 세션)**: 최종 검증. 모바일 반응형 스모크(뷰포트 320~768 체크), 접근성 감사(키보드 only 시나리오, 스크린 리더 레이블 누락), E2E 시나리오 확대(문서 생성→편집→전환→내보내기/가져오기 왕복), 성능 점검(대용량 문서 렌더/저장 지연), README/라이선스 정리, 배포 파이프라인(정적 호스팅 — Vercel/Netlify/Cloudflare Pages 중 택일).
+- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → 3 프리뷰 → 4 서식 툴바 → 5 문서 저장소 → 6 내보내기/가져오기 → **7 최종 검증(다음)**.
 - **원격 저장소**: https://github.com/chul1215/mdpro (public, `main` → `origin/main`). 최초 푸시 커밋은 `e2e5dd6` (Phase 0~2 스냅샷).
 
 ## Commands
@@ -47,8 +47,8 @@ npx vitest run src/stores/uiStore.test.ts
 npx vitest run -t "toggles theme"   # 테스트 이름 필터
 ```
 
-> 직전 작업: Phase 5 완료 시 `npm run check` 132/132 통과, `npm run build` 성공(메인 242KB gzipped, +4KB), `npm run dev`/`npm run preview` HTTP 200, `npm run test:e2e` 1/1.
-> 다음 작업: Phase 6 완료 시 동일 세트 재실행. HTML 내보내기 결과는 크로미움에서 직접 열어 KaTeX/Mermaid가 오프라인 렌더되는지 수동 확인. 가져오기(.md)는 크기 제한(예: 5MB)을 E2E로 검증.
+> 직전 작업: Phase 6 완료 시 `npm run check` 175/175 통과, `npm run build` 성공(메인 246KB gzipped, +4KB), `npm run dev`/`npm run preview` HTTP 200, `npm run test:e2e` 1/1.
+> 다음 작업: Phase 7 완료 시 동일 세트 재실행. 추가로 모바일 뷰포트/다크모드/키보드 only 접근성 수동 확인, 대용량 문서(>1MB) 입력 시 debounce save 성능 체크.
 
 ## Architecture
 
@@ -123,6 +123,16 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - 모바일(`<md`)은 세로 분할, 데스크톱(`≥md`)은 가로 분할 (Tailwind `flex-col md:flex-row`)
 - 사이드바는 모바일에서 오버레이(`z-40` + 백드롭), 데스크톱에서 고정 컬럼
 
+### 내보내기/가져오기 (`src/lib/export/*` + `src/components/Layout/{FileMenu,DropOverlay}.tsx`)
+
+- **내보내기 포맷은 `.md`/`.html` 두 가지만** — PDF/DOCX 라이브러리 추가 금지(CLAUDE.md 규칙).
+- `downloadMarkdown`: Blob(`text/markdown;charset=utf-8`) + 숨은 `<a>` click → revokeObjectURL. 파일명은 `sanitizeFilename(title || '제목 없음') + '.md'`.
+- `downloadHtml`: (1) `renderMarkdown(content)`으로 파이프라인 실행 → (2) 오프스크린 `<div>`에 주입 후 `renderMermaidBlocks`로 SVG 치환(Mermaid 동적 import) → (3) `<img>` 순회 fetch→base64 시도(실패 시 원본 유지) → (4) `<!doctype html><html><head>...<style>${exportStyles}</style>...<body>${rendered}</body></html>` 조립. `exportStyles`는 `katex/dist/katex.min.css?raw` + `highlight.js/styles/github.css?raw` + 자체 타이포그래피를 연결. KaTeX 폰트는 woff2 경로 미해결이라 브라우저 기본 fallback.
+- `readMarkdownFiles(files)`: 확장자(`.md`/`.markdown`) + 크기(`MAX_FILE_SIZE = 5MB`) 검증 → `file.text()` → `extractTitleFromMarkdown` 제목 추출, 빈 결과면 파일명(확장자 제외)을 fallback 제목. `ImportResult = { imported[], errors[] }` 형태로 부분 성공 허용.
+- **Lazy import 필수**: `FileMenu`에서 `downloadMarkdown/downloadHtml/readMarkdownFiles`를 `await import(...)`로 동적 로드. 정적 import 시 unified 파이프라인 + CSS `?raw` 문자열이 메인 번들에 포함되어 ~200KB 증가.
+- `DropOverlay`: `window`에 `dragenter/dragleave/dragover/drop` 리스너 + dragCounter로 child 전환 노이즈 흡수. `DataTransfer.types`는 TS DOM lib에서 `readonly string[]`이므로 `Array.from(dt.types).includes('Files')`로 판정(DOMStringList 캐스팅 금지).
+- `DropdownMenu`: `role="menu"` + roving focus(ArrowUp/Down/Home/End) + 외부 클릭/ESC 닫기 + 닫힌 뒤 트리거 포커스 복원. `FileMenu`가 이를 사용해 TopBar에 배치.
+
 ### 서식 툴바 (`src/components/Toolbar/Toolbar.tsx` + `src/lib/editor/commands.ts`)
 
 - **커맨드 층**: `src/lib/editor/commands.ts`의 순수 함수(`toggleBold/Italic/Strikethrough/InlineCode`, `toggleHeading(level)`, `toggleBulletList/NumberedList/CheckList/Quote`, `insertLink`, `insertCodeBlock`). 각 함수는 `EditorView`를 받아 `view.dispatch({ changes, selection })` 후 `view.focus()`. 멀티 selection range 독립 처리.
@@ -150,8 +160,8 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 
 `vite.config.ts`는 **`vitest/config`에서 `defineConfig`를 import**해야 `test:` 옵션이 타입 인식된다 (`vite`에서 import하면 타입 오류). Vitest 3.x + Vite 6.x 조합을 쓴다 — 버전 불일치 시 `PluginOption` 충돌이 발생한다.
 
-> 직전 작업: Phase 5 — idb 어댑터(DB `mdpro`) + `documentStore` 재작성(activeId만 persist, 800ms debounce save, race-safe flush). `extractTitleFromMarkdown`(코드펜스 스킵, ATX H1)으로 titleManual=false일 때 자동 제목 추출. `ConfirmDialog`(portal + focus trap + body scroll lock). Sidebar는 `<aside role="navigation">` + 상단 섹션은 `<div>`(banner 중복 방지). Editor는 activeId 변경 시 `view.setState`로 undo 히스토리 격리.
-> 다음 작업: Phase 6에서 `src/lib/export/` 모듈을 신설해 `.md`/`.html` 내보내기와 `.md` 가져오기를 구현. HTML 내보내기는 Phase 3 파이프라인을 재사용하되 Mermaid SVG 인라인화 + 이미지 base64 + 인라인 CSS로 **완전 독립형** 문서 생성. TopBar 또는 새 툴바 항목에 "내보내기/가져오기" 드롭다운 배치.
+> 직전 작업: Phase 6 — `src/lib/export/` 신설(markdown/html/import/styles). HTML은 오프스크린 div → Mermaid SVG 인라인화 → 이미지 fetch→base64(실패 시 URL 유지) → 인라인 CSS 쉘로 감싸기. `.md` 가져오기는 파일 선택/드래그 앤 드롭 양쪽, 항상 새 문서. `FileMenu`가 export 모듈을 동적 import해 메인 번들에서 파이프라인/CSS 제외(246KB gzipped 유지).
+> 다음 작업: Phase 7 최종 검증 — 모바일/다크/키보드 접근성 수동 확인, E2E 왕복 시나리오(생성→편집→전환→내보내기→가져오기) 확대, 대용량 문서 성능, README/라이선스 정리, 배포 파이프라인(Vercel/Netlify/Cloudflare Pages 중 택일).
 
 ## Project Rules
 
@@ -176,8 +186,8 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - 주석은 "왜"만 — "무엇"은 코드로 표현
 - 이모지 사용 금지 (사용자가 명시적으로 요청하지 않는 한)
 
-> 직전 작업: Phase 5까지 테스트 규칙 준수 — 단위 132/132 통과(storage 8 + documentStore 12 + title 12 + ConfirmDialog 11 + Sidebar 7 + TopBar +2 + Editor +1). `fake-indexeddb/auto`를 `src/test/setup.ts`에서 전역 로드. 각 테스트는 `indexedDB.deleteDatabase('mdpro')` + `__resetForTests()` + `localStorage.clear()`로 격리.
-> 다음 작업: Phase 6에서 HTML 내보내기 결과물은 jsdom 제약으로 실제 렌더 검증 어려움 → 생성 문자열의 구조/내용 단위 테스트 + 브라우저에서 오프라인 열기 수동 확인 + E2E로 다운로드 이벤트 발생 여부. `.md` 가져오기는 File API 모의로 테스트.
+> 직전 작업: Phase 6까지 테스트 규칙 준수 — 단위 175/175 통과(export 24 + DropdownMenu 6 + FileMenu 5 + DropOverlay 4 + documentStore +3 추가). Mermaid 실제 SVG 렌더는 jsdom 제약으로 DOM 치환 여부 정도만 검증. HTML 내보내기 실물 렌더는 브라우저 수동 확인 영역.
+> 다음 작업: Phase 7에서 수동 검증 체크리스트(모바일 뷰포트 320/375/768, 다크/라이트, 키보드 only, 스크린 리더)와 대용량 문서(>1MB) 입력 시 debounce save 지연/UI 응답성을 직접 프로파일링.
 
 ## 전문 에이전트
 
@@ -188,5 +198,5 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - **parser-engineer** — 마크다운 파싱/렌더링, CodeMirror 확장
 - **export-specialist** — HTML/MD 내보내기, IndexedDB 저장소
 
-> 직전 작업: Phase 5 — `export-specialist`가 `src/lib/storage/` + documentStore 재작성, `parser-engineer`가 `src/lib/markdown/title.ts` + Editor 전환 로직, `ui-designer`가 Sidebar + ConfirmDialog + TopBar 제목 input을 병렬로 담당. 사전에 인터페이스(스토어 타입 + `extractTitleFromMarkdown` 시그니처)를 고정해 파일 충돌 없이 병렬 실행 성공.
-> 다음 작업: Phase 6에서 `export-specialist`가 `src/lib/export/` 모듈 주도 — HTML 직렬화(인라인 CSS + Mermaid SVG + 이미지 base64) + `.md` Blob 다운로드 + `.md` 가져오기(File API, documentStore.createDocument 연동). UI 버튼은 `ui-designer`.
+> 직전 작업: Phase 6 — `export-specialist`가 `src/lib/export/` 모듈과 documentStore.createDocument 확장, `ui-designer`가 `DropdownMenu`/`FileMenu`/`DropOverlay` + TopBar/Layout 통합을 병렬로 담당. 통합 시 DropOverlay의 `DOMStringList` 캐스팅 오류(TS 엄격)는 메인 에이전트가 수정. 번들 확인 후 FileMenu의 export 모듈을 동적 import로 전환해 메인 번들 방어.
+> 다음 작업: Phase 7에서 자동화 가능한 항목은 `parser-engineer`/`ui-designer`/`export-specialist`로 분산 불필요. 최종 검증은 주로 main agent가 수동 + E2E 시나리오 작성(Playwright 파일 업로드/다운로드 이벤트 포함).

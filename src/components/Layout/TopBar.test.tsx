@@ -2,9 +2,22 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// FileMenu가 export 모듈을 정적 import하므로 IDB/Blob 실행을 피하려 모킹.
+vi.mock('../../lib/export/markdown', () => ({
+  downloadMarkdown: vi.fn(),
+}));
+vi.mock('../../lib/export/html', () => ({
+  downloadHtml: vi.fn(async () => undefined),
+}));
+vi.mock('../../lib/export/import', () => ({
+  readMarkdownFiles: vi.fn(async () => ({ imported: [], errors: [] })),
+}));
+
 // TopBar가 documentStore에서 title/setTitle을 읽으므로 스토어를 모킹해 IDB 접근을 우회한다.
 const setTitle = vi.fn();
-let mockDoc = { title: '', setTitle };
+const createDocument = vi.fn(async () => 'id');
+const switchTo = vi.fn(async () => undefined);
+let mockDoc = { title: '', content: '', setTitle, createDocument, switchTo };
 
 vi.mock('../../stores/documentStore', () => ({
   useDocumentStore: <T,>(selector: (s: typeof mockDoc) => T) => selector(mockDoc),
@@ -18,7 +31,9 @@ describe('TopBar', () => {
     localStorage.clear();
     useUIStore.setState({ theme: 'light', viewMode: 'split', sidebarOpen: true });
     setTitle.mockClear();
-    mockDoc = { title: '', setTitle };
+    createDocument.mockClear();
+    switchTo.mockClear();
+    mockDoc = { title: '', content: '', setTitle, createDocument, switchTo };
   });
 
   it('renders view mode radio group with three options', () => {
@@ -60,7 +75,7 @@ describe('TopBar', () => {
   });
 
   it('renders title input with aria-label 문서 제목', () => {
-    mockDoc = { title: 'My Doc', setTitle };
+    mockDoc = { title: 'My Doc', content: '', setTitle, createDocument, switchTo };
     render(<TopBar />);
     const input = screen.getByRole('textbox', { name: '문서 제목' });
     expect(input).toBeInTheDocument();
@@ -75,5 +90,10 @@ describe('TopBar', () => {
     expect(setTitle).toHaveBeenCalled();
     // 마지막 인자가 'A'인지 확인 (controlled input + 빈 초기값).
     expect(setTitle).toHaveBeenLastCalledWith('A');
+  });
+
+  it('renders file menu trigger', () => {
+    render(<TopBar />);
+    expect(screen.getByRole('button', { name: '파일 메뉴' })).toBeInTheDocument();
   });
 });

@@ -1,5 +1,13 @@
 import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Layout이 FileMenu/DropOverlay를 통해 정적 import하는 export 모듈을 모킹해 외부 의존 제거.
+vi.mock('../../lib/export/markdown', () => ({ downloadMarkdown: vi.fn() }));
+vi.mock('../../lib/export/html', () => ({ downloadHtml: vi.fn(async () => undefined) }));
+vi.mock('../../lib/export/import', () => ({
+  readMarkdownFiles: vi.fn(async () => ({ imported: [], errors: [] })),
+}));
+
 import { Layout } from './Layout';
 import { useUIStore } from '../../stores/uiStore';
 

@@ -166,6 +166,45 @@ describe('documentStore', () => {
     expect(s.titleManual).toBe(true);
   });
 
+  it('createDocument({ title, content }) treats explicit mismatched title as manual', async () => {
+    await useDocumentStore.getState().hydrate();
+    const id = await useDocumentStore
+      .getState()
+      .createDocument({ title: '수동', content: '# 자동' });
+    const s = useDocumentStore.getState();
+    expect(s.activeId).toBe(id);
+    expect(s.title).toBe('수동');
+    expect(s.content).toBe('# 자동');
+    expect(s.titleManual).toBe(true);
+    const persisted = await getDocument(id);
+    expect(persisted?.title).toBe('수동');
+    expect(persisted?.content).toBe('# 자동');
+  });
+
+  it('createDocument({ content }) auto-extracts title from H1 without marking manual', async () => {
+    await useDocumentStore.getState().hydrate();
+    const id = await useDocumentStore
+      .getState()
+      .createDocument({ content: '# 추출됨\n\n본문' });
+    const s = useDocumentStore.getState();
+    expect(s.activeId).toBe(id);
+    expect(s.title).toBe('추출됨');
+    expect(s.titleManual).toBe(false);
+    const persisted = await getDocument(id);
+    expect(persisted?.title).toBe('추출됨');
+  });
+
+  it('createDocument() with no args keeps legacy default title', async () => {
+    await useDocumentStore.getState().hydrate();
+    const id = await useDocumentStore.getState().createDocument();
+    const s = useDocumentStore.getState();
+    expect(s.activeId).toBe(id);
+    expect(s.title).toBe('제목 없음');
+    expect(s.content).toBe('# 제목 없음\n\n');
+    // "# 제목 없음\n\n"의 H1에서 추출한 auto 제목과 동일 → manual 아님
+    expect(s.titleManual).toBe(false);
+  });
+
   it('document summary reflects latest title after save', async () => {
     await useDocumentStore.getState().hydrate();
     const id = useDocumentStore.getState().activeId!;
