@@ -7,7 +7,9 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { useDocumentStore } from '../../stores/documentStore';
 import { useUIStore } from '../../stores/uiStore';
+import { useEditorStore } from '../../stores/editorStore';
 import { lightTheme, darkTheme } from './cmTheme';
+import { toggleBold, toggleItalic } from '../../lib/editor/commands';
 
 export function Editor() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -29,7 +31,24 @@ export function Editor() {
         history(),
         bracketMatching(),
         indentOnInput(),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
+        keymap.of([
+          {
+            key: 'Mod-b',
+            run: (v) => {
+              toggleBold(v);
+              return true;
+            },
+          },
+          {
+            key: 'Mod-i',
+            run: (v) => {
+              toggleItalic(v);
+              return true;
+            },
+          },
+          ...defaultKeymap,
+          ...historyKeymap,
+        ]),
         markdown({ base: markdownLanguage, codeLanguages: languages }),
         EditorView.lineWrapping,
         themeCompartment.of(
@@ -49,6 +68,7 @@ export function Editor() {
 
     const view = new EditorView({ state, parent: hostRef.current });
     viewRef.current = view;
+    useEditorStore.getState().setView(view);
 
     const unsub = useDocumentStore.subscribe((state, prev) => {
       if (state.content === prev.content) return;
@@ -62,6 +82,7 @@ export function Editor() {
 
     return () => {
       unsub();
+      useEditorStore.getState().setView(null);
       view.destroy();
       viewRef.current = null;
     };

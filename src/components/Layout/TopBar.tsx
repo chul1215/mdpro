@@ -41,9 +41,9 @@ export function TopBar() {
         >
           <PanelLeft className="h-4 w-4" />
         </button>
-        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <h1 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           MDPro
-        </span>
+        </h1>
       </div>
 
       <div

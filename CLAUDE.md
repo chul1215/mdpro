@@ -15,13 +15,15 @@ MDPro는 초보자도 쉽게 쓸 수 있는 브라우저 기반 마크다운 에
 > 다음 작업: Phase N+1 — <무엇을 할 예정인가>
 ```
 
-### 전체 프로젝트 현황 (최종 갱신 2026-04-17 · /init 재실행)
+### 전체 프로젝트 현황 (최종 갱신 2026-04-20 · Phase 4 완료, Phase 5는 다음 세션 예정)
 
-- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃 · 테마/뷰모드 · 사이드바) · Phase 2 (CodeMirror 에디터 · documentStore · 양방향 바인딩)
-- **현재 소스 상태**: `src/components/{Editor,Layout}/` 구현됨, `src/lib/` 비어있음(Phase 3에서 `markdown/` 추가 예정), `src/components/{Preview,Toolbar}/` 미생성.
-- **직전 작업**: Phase 2 — CodeMirror 6 에디터 통합, `documentStore`, 테마 `Compartment` 재설정, 루프 방지 양방향 바인딩. 단위 테스트 **21/21 통과**, `npm run build` 성공(번들 ~235KB gzipped), `npm run dev` HTTP 200 확인.
-- **다음 작업**: Phase 3 — `src/lib/markdown/`에 `unified` 파이프라인(remark-parse → remark-gfm → remark-math → remark-rehype → rehype-katex → rehype-highlight → rehype-sanitize → rehype-stringify) 구성. `PreviewPane`이 `documentStore.content`를 150ms debounce로 구독하여 렌더링. Mermaid 통합, XSS 방지 단위 테스트 필수.
-- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → **3 프리뷰(다음)** → 4 서식 툴바 → 5 문서 저장소/파일관리 → 6 내보내기/가져오기 → 7 최종 검증.
+- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃 · 테마/뷰모드 · 사이드바) · Phase 2 (CodeMirror 에디터 · documentStore · 양방향 바인딩) · Phase 3 (unified 프리뷰 파이프라인 · Mermaid · KaTeX · hljs · XSS 방지) · Phase 4 (서식 툴바 · editorStore view registry · 11개 서식 커맨드 · Mod-b/i 키맵)
+- **작업 트리 상태**: Phase 3 / Phase 4 분리 커밋 2개 생성 예정 — (3) PreviewPane/index.css/main.tsx + `src/lib/markdown/` + unified/katex/mermaid/hljs deps; (4) Editor/Layout/TopBar + `src/components/Toolbar/` + `src/lib/editor/` + `src/stores/editorStore` + CLAUDE.md 갱신.
+- **현재 소스 상태**: `src/lib/markdown/{pipeline,sanitize-schema,mermaid,index}.ts` + `src/lib/editor/commands.ts`(11개 서식 커맨드) + `src/stores/editorStore.ts`(view 레지스트리) + `src/components/Toolbar/Toolbar.tsx`(4그룹 13버튼, roving tabindex). `PreviewPane`이 파이프라인 동적 import + 150ms debounce. `src/components/Preview/` 미생성(Layout 하위 PreviewPane로 유지).
+- **직전 작업**: Phase 4 — `editorStore`(non-persistent zustand)로 `EditorView` 핸들 공유. `src/lib/editor/commands.ts`에 인라인 토글 4종(bold/italic/strikethrough/inlineCode) + 헤딩 3종 + 리스트 3종(bullet/numbered 순차 번호/check) + quote + insertLink(선택 없으면 "링크 텍스트" placeholder 선택 상태) + insertCodeBlock(language 옵션) 구현. 각 커맨드는 멀티 selection range 처리하고 `view.dispatch` 후 `focus()`. `Toolbar`는 `role="toolbar"` + ArrowLeft/Right/Home/End roving tabindex + OS별 Mod 단축키 툴팁. Editor.tsx에 `Mod-b`/`Mod-i` 키맵과 view 레지스트리 등록/해제. TopBar 로고를 `<h1>`로 격상(접근성 + E2E 스모크 수렴). **단위 83/83 통과**(editorStore 2 + commands 36 + Toolbar 6 추가), E2E 1/1 통과, 빌드 성공(메인 238KB gzipped, Phase 3 대비 +3KB).
+- **다음 작업 (Phase 5, 새 세션)**: `documentStore`를 IndexedDB(`idb`) 기반 다중 문서 모델로 확장. 문서 목록 · 생성/삭제/전환 · 자동 저장(debounced) · 타이틀 편집 · 사이드바에 문서 목록 렌더. `export-specialist`가 IndexedDB 스키마(문서 id/title/content/updatedAt) 및 낙관적 쓰기 전략 설계. 기존 `title/content` 단일 상태는 "현재 활성 문서 ID" + IndexedDB 쿼리 구조로 전환.
+- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → 3 프리뷰 → 4 서식 툴바 → **5 문서 저장소/파일관리(다음)** → 6 내보내기/가져오기 → 7 최종 검증.
+- **원격 저장소**: https://github.com/chul1215/mdpro (public, `main` → `origin/main`). 최초 푸시 커밋은 `e2e5dd6` (Phase 0~2 스냅샷).
 
 ## Commands
 
@@ -45,8 +47,8 @@ npx vitest run src/stores/uiStore.test.ts
 npx vitest run -t "toggles theme"   # 테스트 이름 필터
 ```
 
-> 직전 작업: Phase 2 완료 시 `npm run check` 전체 통과, `npm run build` 성공 (번들 ~235KB gzipped, CodeMirror 언어팩 포함), `npm run dev` HTTP 200 확인.
-> 다음 작업: Phase 3 완료 시 동일 명령 세트 재실행 + 프리뷰 번들 크기 영향 모니터링.
+> 직전 작업: Phase 4 완료 시 `npm run check` 전체 통과(83/83), `npm run build` 성공(메인 238KB gzipped, +3KB), `npm run dev`/`npm run preview` HTTP 200, `npm run test:e2e` 1/1 통과(Playwright chromium 최초 설치 후).
+> 다음 작업: Phase 5 완료 시 동일 세트 재실행. IndexedDB 영속 로직은 `fake-indexeddb`로 단위 테스트하고, 문서 전환/자동 저장 UX는 E2E 케이스로 커버 권장.
 
 ## Architecture
 
@@ -56,13 +58,19 @@ npx vitest run -t "toggles theme"   # 테스트 이름 필터
 ┌─────────────┐   setContent()    ┌──────────────────┐
 │  Editor.tsx │ ────────────────▶ │ documentStore    │
 │ (CodeMirror)│ ◀──────────────── │ (Zustand)        │
-└─────────────┘   subscribe()     └────────┬─────────┘
-                                            │ content
-                                            ▼
-                                  ┌──────────────────┐
-                                  │  Preview (예정)   │
-                                  │  unified/rehype  │
-                                  └──────────────────┘
+└──────┬──────┘   subscribe()     └────────┬─────────┘
+       │ setView(view)                     │ content
+       ▼                                   ▼
+┌─────────────┐                  ┌──────────────────┐
+│ editorStore │                  │   PreviewPane    │
+│ (view핸들)  │                  │  unified/rehype  │
+└──────┬──────┘                  └──────────────────┘
+       │ view
+       ▼
+┌─────────────┐   dispatch()
+│  Toolbar    │───► view (CodeMirror 트랜잭션)
+│ (서식버튼)  │
+└─────────────┘
 
 ┌─────────────┐   toggle/set      ┌──────────────────┐
 │  TopBar /   │ ────────────────▶ │ uiStore          │
@@ -72,10 +80,11 @@ npx vitest run -t "toggles theme"   # 테스트 이름 필터
 
 ### 상태 관리 패턴 (Zustand)
 
-두 개의 스토어로 책임 분리:
+세 개의 스토어로 책임 분리:
 
 - **`src/stores/uiStore.ts`** — 테마(`light|dark`), 뷰모드(`edit|split|preview`), 사이드바 상태. `persist` 미들웨어로 `localStorage` 키 `mdpro-ui`에 지속. 시스템 `prefers-color-scheme` 초기값 자동 감지.
 - **`src/stores/documentStore.ts`** — 현재 열린 문서의 `title`, `content`. 아직 비영속(메모리만). Phase 5에서 IndexedDB 기반 다중 문서로 확장 예정.
+- **`src/stores/editorStore.ts`** — CodeMirror `EditorView` 인스턴스 핸들(`view | null`). Non-persistent. Editor 마운트/언마운트 시 `setView`로 등록/해제. Toolbar 및 외부 컴포넌트가 view에 접근해 `dispatch` 트랜잭션을 보낼 때 사용. non-serializable 값이므로 persist 금지.
 
 테마 적용은 `src/hooks/useTheme.ts`가 `uiStore.theme` 변경을 구독하여 `document.documentElement`에 `.dark` 클래스를 토글한다. Tailwind `darkMode: 'class'` 설정과 연동된다.
 
@@ -91,10 +100,20 @@ npx vitest run -t "toggles theme"   # 테스트 이름 필터
 ### 레이아웃 구조
 
 `Layout`이 `uiStore.viewMode`와 `sidebarOpen`을 읽어 조건부 렌더링:
+- 상단: `TopBar` → `Toolbar`(서식 도구, 뷰모드 무관 상시 표시)
 - `viewMode !== 'preview'` → `EditorPane` 표시
 - `viewMode !== 'edit'` → `PreviewPane` 표시
 - 모바일(`<md`)은 세로 분할, 데스크톱(`≥md`)은 가로 분할 (Tailwind `flex-col md:flex-row`)
 - 사이드바는 모바일에서 오버레이(`z-40` + 백드롭), 데스크톱에서 고정 컬럼
+
+### 서식 툴바 (`src/components/Toolbar/Toolbar.tsx` + `src/lib/editor/commands.ts`)
+
+- **커맨드 층**: `src/lib/editor/commands.ts`의 순수 함수(`toggleBold/Italic/Strikethrough/InlineCode`, `toggleHeading(level)`, `toggleBulletList/NumberedList/CheckList/Quote`, `insertLink`, `insertCodeBlock`). 각 함수는 `EditorView`를 받아 `view.dispatch({ changes, selection })` 후 `view.focus()`. 멀티 selection range 독립 처리.
+- **인라인 토글**: 선택이 이미 마커로 감싸져 있으면 제거, 빈 선택이면 마커 쌍 삽입 후 커서 중앙, 텍스트 선택이면 감싸고 감싼 범위로 선택 복원.
+- **블록 토글**: 선택 포함 라인별로 prefix 교체 (`toggleBulletList`는 다른 블록 prefix도 인식해 교체, numbered list는 1부터 순차 번호).
+- **좌표 처리 주의**: 여러 라인에 걸친 블록 토글에서 `changes.mapPos`를 쓰면 이미 변경된 좌표로 매핑돼 어긋난다 → **원본 좌표 기준**으로 prefix 계산 후 한 번에 trans 발행.
+- **UI 층**: `Toolbar`가 `useEditorStore((s) => s.view)` 구독. view `null`이면 전체 버튼 `disabled`. `role="toolbar"` + roving tabindex(`ArrowLeft/Right/Home/End`) + OS별 Mod 표기 툴팁(⌘ vs Ctrl).
+- **키맵**: Editor.tsx의 `keymap.of([...])`에 `Mod-b`/`Mod-i`를 `toggleBold/Italic` 래핑으로 추가.
 
 ### 테스트 구성
 
@@ -114,8 +133,8 @@ npx vitest run -t "toggles theme"   # 테스트 이름 필터
 
 `vite.config.ts`는 **`vitest/config`에서 `defineConfig`를 import**해야 `test:` 옵션이 타입 인식된다 (`vite`에서 import하면 타입 오류). Vitest 3.x + Vite 6.x 조합을 쓴다 — 버전 불일치 시 `PluginOption` 충돌이 발생한다.
 
-> 직전 작업: Phase 2 — `Editor.tsx`에 `Compartment` 기반 테마 재설정 + 루프 방지용 양방향 바인딩 패턴 정착. `documentStore`는 아직 비영속.
-> 다음 작업: Phase 3에서 `src/lib/markdown/`에 `unified` 파이프라인 추가, `PreviewPane`이 `documentStore.content` 구독. Phase 5에서 `documentStore`를 IndexedDB 기반 다중 문서 모델로 확장.
+> 직전 작업: Phase 4 — `editorStore`로 view 공유(zustand view registry 채택; ref forwarding보다 슬래시 커맨드/전역 키 핸들러 확장에 유리). `src/lib/editor/commands.ts` 순수 함수 11종 + 36 단위 테스트. `Toolbar`는 `role="toolbar"` roving tabindex, view null 시 전체 disabled. `Editor.tsx`에 `Mod-b/i` 키맵. TopBar 로고를 `<h1>`로 격상하여 접근성 개선 + E2E 스모크 수렴.
+> 다음 작업: Phase 5에서 `documentStore`를 IndexedDB(`idb`) 기반 다중 문서 모델로 확장 — 문서 스키마(id/title/content/updatedAt), 현재 활성 문서 ID 상태, 자동 저장 debounce(500~1000ms), 문서 목록/생성/삭제/전환 UI를 사이드바에 통합.
 
 ## Project Rules
 
@@ -140,8 +159,8 @@ npx vitest run -t "toggles theme"   # 테스트 이름 필터
 - 주석은 "왜"만 — "무엇"은 코드로 표현
 - 이모지 사용 금지 (사용자가 명시적으로 요청하지 않는 한)
 
-> 직전 작업: Phase 2까지 테스트 규칙 준수 — 단위 테스트 21/21 통과, 내보내기 기능은 아직 미구현.
-> 다음 작업: Phase 3에서 파싱 순수 함수에 대한 단위 테스트(XSS 방지, GFM/수식 케이스) 필수 추가.
+> 직전 작업: Phase 4까지 테스트 규칙 준수 — 단위 83/83 통과(commands 36 + Toolbar 6 + editorStore 2 추가). E2E 1/1 통과(Playwright chromium 최초 설치 필요했음). Mod-b/i 키 동작과 툴바 버튼 상태는 ui 단위 테스트 + E2E로 커버.
+> 다음 작업: Phase 5에서 IndexedDB 어댑터 순수 테스트는 `fake-indexeddb`로, 문서 전환/자동 저장 타이밍은 vitest `vi.useFakeTimers()`로 검증. 복수 문서 전환 시 Editor의 `doc` 재설정이 undo 히스토리를 오염시키지 않도록 주의.
 
 ## 전문 에이전트
 
@@ -152,5 +171,5 @@ npx vitest run -t "toggles theme"   # 테스트 이름 필터
 - **parser-engineer** — 마크다운 파싱/렌더링, CodeMirror 확장
 - **export-specialist** — HTML/MD 내보내기, IndexedDB 저장소
 
-> 직전 작업: Phase 2 — `ui-designer` + `parser-engineer`가 레이아웃 및 CodeMirror 작업에 활용됨.
-> 다음 작업: Phase 3에서 `parser-engineer`로 `unified` 파이프라인 설계, Phase 5에서 `export-specialist`로 IndexedDB 전환.
+> 직전 작업: Phase 4 — `parser-engineer`가 `src/lib/editor/commands.ts`(11 함수 + 36 테스트), `ui-designer`가 `Toolbar.tsx`(4그룹 13버튼 + roving tabindex + 6 테스트)와 Layout 통합을 병렬로 담당. 시그니처를 사전에 고정해서 병렬 실행 가능했음.
+> 다음 작업: Phase 5에서 `export-specialist`가 IndexedDB 스키마/어댑터(`src/lib/storage/` 신설 예정) + documentStore 확장 + 사이드바 문서 목록 UI를 주도. `markdown-architect`가 문서 전환 시 Editor undo 히스토리 처리와 auto-save race 전략을 검토.
