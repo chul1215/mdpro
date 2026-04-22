@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MDPro는 초보자도 쉽게 쓸 수 있는 브라우저 기반 마크다운 에디터/뷰어다. 실시간 분할 프리뷰, 자동 저장(IndexedDB), HTML/MD 내보내기, 다크/라이트 테마를 지원한다. 설치 없이 브라우저에서 동작하며 순수 웹 표준(HTML/CSS/JS)으로 작성되어 OS 독립적이다.
 
+사용자 대상 문서는 `README.md`(한글+영문), 릴리스 전 수동 검증 체크리스트는 `docs/manual-checklist.md`. 이 파일은 **개발자/Claude 에이전트 전용** 내부 가이드다.
+
 ## 작업 진행 현황
 
 **`/init` 명령을 실행할 때마다 이 섹션을 최신 상태로 갱신한다.** 각 주요 섹션(Architecture, Commands, Project Rules 등)에도 해당 섹션 맨 아래에 "직전 작업 / 다음 작업" 메모를 한 줄씩 남겨, 다음 Claude 인스턴스가 어디까지 진행되었는지 즉시 파악할 수 있도록 한다. 형식 예:
@@ -45,9 +47,19 @@ npm run check        # typecheck + lint + test 한번에
 ```bash
 npx vitest run src/stores/uiStore.test.ts
 npx vitest run -t "toggles theme"   # 테스트 이름 필터
+
+npx playwright test e2e/a11y.spec.ts           # 단일 E2E 스펙
+npx playwright test --reporter=list            # 축약 리포터
+npx playwright install chromium                # 최초 실행 시 브라우저 설치
 ```
 
-> 직전 작업: Phase 7 완료 시 `npm run check` 175/175, `npm run build` 성공(메인 245.69KB gzipped), `npm run test:e2e` 8/8(smoke/a11y/roundtrip/mobile). axe-core로 WCAG 2.1 AA 위반 0 검증.
+E2E 스펙(`e2e/*.spec.ts`):
+- `smoke.spec.ts` — 앱 최초 로드 (MDPro heading 가시 확인)
+- `a11y.spec.ts` — axe-core로 초기/파일메뉴 오픈 상태 WCAG 2.1 AA 위반 0
+- `roundtrip.spec.ts` — 새 문서→편집→제목 자동 추출(debounce)→전환→삭제 모달, `.md`/`.html` 다운로드 이벤트. 각 테스트 시작 시 `indexedDB.deleteDatabase('mdpro')`로 격리.
+- `mobile.spec.ts` — 375×812 모바일 + 768×1024 태블릿 뷰포트 스모크
+
+> 직전 작업: Phase 7 완료 — `npm run check` 175/175, `npm run build` 성공(메인 245.69KB gzipped), `npm run test:e2e` 8/8(smoke/a11y/roundtrip/mobile). axe-core로 WCAG 2.1 AA 위반 0 검증.
 > 다음 작업: 신규 기능 추가 시 E2E 시나리오와 axe 감사 범위를 확장. 수동 항목은 `docs/manual-checklist.md`.
 
 ## Architecture
@@ -144,11 +156,12 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 
 ### 테스트 구성
 
-- **Vitest** + `jsdom` + `@testing-library/react`. 설정은 `vite.config.ts`의 `test:` 블록. `src/test/setup.ts`에서 `@testing-library/jest-dom` 확장 로드.
+- **Vitest** + `jsdom` + `@testing-library/react`. 설정은 `vite.config.ts`의 `test:` 블록. `src/test/setup.ts`에서 `@testing-library/jest-dom` + `fake-indexeddb/auto` 전역 로드.
 - `include: src/**/*.{test,spec}.{ts,tsx}` — Playwright `e2e/` 디렉토리는 제외.
-- **Playwright** E2E는 `e2e/*.spec.ts` (`playwright.config.ts`에서 `webServer`로 dev 서버 자동 기동).
+- **Playwright** E2E는 `e2e/*.spec.ts` (`playwright.config.ts`에서 `webServer`로 dev 서버 자동 기동). `@axe-core/playwright`로 접근성 자동 감사.
 - UI 테스트는 역할 기반 쿼리 사용 (`getByRole`, `getByLabelText`). `getByTestId`는 DOM 호스트가 필요한 CodeMirror 같은 경우만 제한적으로 사용.
-- 스토어 테스트는 `beforeEach`에서 `localStorage.clear()` + `setState` 또는 `reset()`으로 격리.
+- 스토어 테스트는 `beforeEach`에서 `localStorage.clear()` + `setState` 또는 `reset()`으로 격리. IDB 어댑터 테스트는 `indexedDB.deleteDatabase('mdpro')` + `__resetForTests()`.
+- E2E 격리: roundtrip 테스트는 `page.evaluate(() => indexedDB.deleteDatabase('mdpro'))` + `localStorage.clear()`를 `beforeEach`에 둔다. Playwright 기본 context 격리로 충분하지 않은 경우(동일 origin 공유) 대비.
 
 ### TypeScript 설정
 
@@ -160,8 +173,23 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 
 `vite.config.ts`는 **`vitest/config`에서 `defineConfig`를 import**해야 `test:` 옵션이 타입 인식된다 (`vite`에서 import하면 타입 오류). Vitest 3.x + Vite 6.x 조합을 쓴다 — 버전 불일치 시 `PluginOption` 충돌이 발생한다.
 
-> 직전 작업: Phase 6 — `src/lib/export/` 신설(markdown/html/import/styles). HTML은 오프스크린 div → Mermaid SVG 인라인화 → 이미지 fetch→base64(실패 시 URL 유지) → 인라인 CSS 쉘로 감싸기. `.md` 가져오기는 파일 선택/드래그 앤 드롭 양쪽, 항상 새 문서. `FileMenu`가 export 모듈을 동적 import해 메인 번들에서 파이프라인/CSS 제외(246KB gzipped 유지).
-> 다음 작업: Phase 7 최종 검증 — 모바일/다크/키보드 접근성 수동 확인, E2E 왕복 시나리오(생성→편집→전환→내보내기→가져오기) 확대, 대용량 문서 성능, README/라이선스 정리, 배포 파이프라인(Vercel/Netlify/Cloudflare Pages 중 택일).
+### 번들 다이어트 전략
+
+메인 엔트리를 ~246KB gzipped로 유지하기 위해 용량이 큰 모듈은 전부 **동적 import**로 분리한다:
+- `src/lib/markdown/pipeline.ts`(unified + remark + rehype + KaTeX/hljs) — `PreviewPane`에서 첫 렌더 시 로드
+- `mermaid` — `src/lib/markdown/mermaid.ts`의 `loadMermaid()`에서 필요 시 로드
+- `src/lib/export/{markdown,html,import}` — `FileMenu`가 클릭 시점에 `await import()`
+
+정적 import로 바뀌는 회귀가 생기면 메인이 즉시 400KB+로 튀므로, 빌드 로그에서 메인 엔트리 gzip 크기를 항상 확인할 것(현재 기준 245.69KB).
+
+### 배포 (Cloudflare Pages)
+
+- `public/_redirects`에 `/*  /index.html  200` — SPA fallback. 빌드 시 `dist/`로 자동 복사된다.
+- Cloudflare Pages 대시보드 설정: Framework preset `Vite`, Build command `npm run build`, Output `dist`. Node 20+ 필요.
+- IndexedDB(`mdpro`)는 origin 격리 — 동일 도메인에서만 데이터 공유.
+
+> 직전 작업: Phase 7 — axe-core 감사 통합 후 3가지 위반(CodeMirror aria-label / Sidebar timestamp 색상 대비 / DropdownMenu `<ul>` 구조) 수정. Sidebar `<aside>`에 `role="navigation"` 승격. 모바일 첫 방문 UX: `uiStore.sidebarOpen` 기본값을 `matchMedia('(max-width: 767px)')`로 분기. Cloudflare Pages `_redirects` 추가.
+> 다음 작업: 신규 기능 확장 시 기존 데이터 흐름 다이어그램과 `buildExtensions` 패턴을 먼저 확인. UI 컴포넌트는 TopBar/Toolbar/Sidebar의 포커스 링/aria 패턴을 재사용.
 
 ## Project Rules
 
@@ -186,8 +214,8 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - 주석은 "왜"만 — "무엇"은 코드로 표현
 - 이모지 사용 금지 (사용자가 명시적으로 요청하지 않는 한)
 
-> 직전 작업: Phase 6까지 테스트 규칙 준수 — 단위 175/175 통과(export 24 + DropdownMenu 6 + FileMenu 5 + DropOverlay 4 + documentStore +3 추가). Mermaid 실제 SVG 렌더는 jsdom 제약으로 DOM 치환 여부 정도만 검증. HTML 내보내기 실물 렌더는 브라우저 수동 확인 영역.
-> 다음 작업: Phase 7에서 수동 검증 체크리스트(모바일 뷰포트 320/375/768, 다크/라이트, 키보드 only, 스크린 리더)와 대용량 문서(>1MB) 입력 시 debounce save 지연/UI 응답성을 직접 프로파일링.
+> 직전 작업: Phase 7 완료 — 단위 175/175 + E2E 8/8(smoke/a11y × 2/roundtrip × 3/mobile × 2). 자동 접근성 감사(axe WCAG 2.1 AA)는 초기/메뉴 오픈 두 상태에서 통과. HTML export 실물 렌더, 스크린 리더, 대용량 문서 성능은 `docs/manual-checklist.md`의 수동 영역.
+> 다음 작업: 릴리스 후보마다 `docs/manual-checklist.md` 10개 영역 수행 후 통과 여부를 커밋 메시지 또는 릴리스 노트에 기록.
 
 ## 전문 에이전트
 
@@ -198,5 +226,5 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - **parser-engineer** — 마크다운 파싱/렌더링, CodeMirror 확장
 - **export-specialist** — HTML/MD 내보내기, IndexedDB 저장소
 
-> 직전 작업: Phase 6 — `export-specialist`가 `src/lib/export/` 모듈과 documentStore.createDocument 확장, `ui-designer`가 `DropdownMenu`/`FileMenu`/`DropOverlay` + TopBar/Layout 통합을 병렬로 담당. 통합 시 DropOverlay의 `DOMStringList` 캐스팅 오류(TS 엄격)는 메인 에이전트가 수정. 번들 확인 후 FileMenu의 export 모듈을 동적 import로 전환해 메인 번들 방어.
-> 다음 작업: Phase 7에서 자동화 가능한 항목은 `parser-engineer`/`ui-designer`/`export-specialist`로 분산 불필요. 최종 검증은 주로 main agent가 수동 + E2E 시나리오 작성(Playwright 파일 업로드/다운로드 이벤트 포함).
+> 직전 작업: Phase 7 — axe 감사, E2E 확대, README/LICENSE, Cloudflare Pages `_redirects`는 메인 에이전트 단독으로 처리. 접근성 위반 수정 범위가 여러 컴포넌트에 걸쳐 작았기 때문에 서브에이전트 분산 없이 집중 수정이 더 효율적이었음.
+> 다음 작업: 새 페이즈/기능이 필요할 때는 시그니처(타입/함수명)를 사전에 고정해 3~4개 서브에이전트를 병렬 실행. Phase 3~6 패턴이 성공적이었으므로 그대로 재사용.
