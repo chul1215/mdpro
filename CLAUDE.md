@@ -17,15 +17,16 @@ MDPro는 초보자도 쉽게 쓸 수 있는 브라우저 기반 마크다운 에
 > 다음 작업: Phase N+1 — <무엇을 할 예정인가>
 ```
 
-### 전체 프로젝트 현황 (최종 갱신 2026-04-20 · Phase 7 완료 — 전체 로드맵 종료)
+### 전체 프로젝트 현황 (최종 갱신 2026-04-22 · Phase 7 종료 후 Apple 디자인 시스템 적용)
 
-- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃) · Phase 2 (CodeMirror 에디터) · Phase 3 (unified 프리뷰 파이프라인) · Phase 4 (서식 툴바) · Phase 5 (IndexedDB 다중 문서) · Phase 6 (.md/.html 내보내기 + .md 가져오기) · Phase 7 (E2E 확대 · 접근성 자동 감사 · README/LICENSE · Cloudflare Pages 배포 설정 · 수동 검증 체크리스트)
-- **작업 트리 상태**: Phase 7 단일 커밋 예정. 변경/신규: `@axe-core/playwright` devDep 추가, `e2e/{a11y,roundtrip,mobile}.spec.ts` 신설, `README.md` 신설, `LICENSE` 신설, `docs/manual-checklist.md` 신설, `public/_redirects` 신설(SPA fallback), `package.json`에 `license: MIT`. 접근성 위반 수정: `DropdownMenu` `<ul><li role="none">` → `<div role="menu">` 직자식으로 평탄화, Sidebar timestamp 색상 대비 강화(slate-500 → slate-600), `Sidebar <aside>`에 `role="navigation"` 명시, CodeMirror `cm-content`에 `aria-label="마크다운 편집기"` (EditorView.contentAttributes). 모바일 첫 방문 UX 개선: `uiStore.sidebarOpen` 기본값을 `matchMedia('(max-width: 767px)')` 감지로 분기.
-- **현재 소스 상태**: E2E 8 시나리오(smoke/a11y × 2/roundtrip × 3/mobile × 2). axe-core 감사가 두 상태(초기/메뉴 open)에서 WCAG 2.1 AA 위반 0 검증. roundtrip은 새 문서→편집→제목 자동 추출(debounce 대기)→전환→삭제 모달 확정 + md/html 다운로드 이벤트 수신.
-- **직전 작업**: Phase 7 — axe 감사 초기 실행에서 3 위반 발견·수정: `aria-input-field-name`(CodeMirror aria-label), `color-contrast`(Sidebar timestamp), `list`(DropdownMenu `<ul>` 구조). Sidebar 역할은 semantic하게 `<aside role="navigation">`로 승격해 E2E selector와 일치. 모바일 375px 뷰포트 테스트는 사이드바 backdrop이 파일 메뉴 클릭을 가로채는 문제를 발견해 `uiStore` 기본값을 모바일 분기로 변경(persist 있어 재방문자 선택은 유지). Cloudflare Pages: `public/_redirects`에 `/* /index.html 200`로 SPA fallback, Vite 프리셋 자동 감지. **단위 175/175 통과**, **E2E 8/8 통과**, 빌드 메인 **245.69KB gzipped** 유지.
-- **향후 유지보수**: 수동 검증 체크리스트는 `docs/manual-checklist.md` 참조. 릴리스 후보마다 실기·스크린 리더·대용량 문서 성능 스팟체크를 수행할 것. 신규 페이즈가 필요해지면 이 블록 하단에 추가.
-- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → 3 프리뷰 → 4 서식 툴바 → 5 문서 저장소 → 6 내보내기/가져오기 → **7 최종 검증(완료)**.
-- **원격 저장소**: https://github.com/chul1215/mdpro (public, `main` → `origin/main`). 최초 푸시 커밋은 `e2e5dd6` (Phase 0~2 스냅샷).
+- **완료 페이즈**: Phase 0 (스캐폴딩) · Phase 1 (레이아웃) · Phase 2 (CodeMirror 에디터) · Phase 3 (unified 프리뷰 파이프라인) · Phase 4 (서식 툴바) · Phase 5 (IndexedDB 다중 문서) · Phase 6 (.md/.html 내보내기 + .md 가져오기) · Phase 7 (E2E 확대 · 접근성 자동 감사 · README/LICENSE · Cloudflare Pages 배포 설정 · 수동 검증 체크리스트) · **포스트-릴리스: Apple 디자인 시스템**(SF Pro + 단일 강조색 + 글래스 TopBar)
+- **작업 트리 상태**: `main` == `origin/main`(36341b2). 클린. 기능 로드맵은 Phase 7까지 확정되어 있고, 이후는 디자인/유지보수성 개선 커밋으로 누적된다.
+- **현재 소스 상태**: E2E 8 시나리오(smoke/a11y × 2/roundtrip × 3/mobile × 2) + 단위 175 테스트. axe-core 감사가 초기/메뉴 open 두 상태에서 WCAG 2.1 AA 위반 0. roundtrip은 새 문서→편집→제목 자동 추출(debounce)→전환→삭제 모달 + md/html 다운로드 이벤트 검증.
+- **직전 작업**: Apple 디자인 시스템 일괄 적용(`36341b2`) — Tailwind에서 `blue-*`를 Apple Blue 스케일로 오버라이드(500=#0071e3), `apple.bg/ink`, `surface.1..5`, `rounded-pill`(980px), `shadow-apple` 토큰 추가. SF Pro Display/Text 폰트 스택 + 네거티브 트래킹(-0.016em/-0.022em) 전역 적용. TopBar는 `rgba(0,0,0,0.72)+backdrop-blur-glass+saturate-180%` 글래스(`relative z-40`로 스태킹 고정). 레이아웃/사이드바/에디터판은 구분선 대신 단일 배경(#f5f5f7 light / #000 dark)으로 전환, "에디터/프리뷰/문서" 라벨 색 `/70` (대비 AA 충족). CodeMirror 테마는 라이트 #f5f5f7 / 다크 #000 + 커서·선택 Apple Blue. ConfirmDialog/DropdownMenu는 `rounded-xl + shadow-apple + ring-1`로 보더 제거.
+- **검증 결과**: `npm run check` 175/175, `npm run test:e2e` 8/8, `npm run build` 성공(메인 **245.81KB gzipped**, +0.12KB 회귀 없음), axe WCAG 2.1 AA 위반 0.
+- **향후 유지보수**: 수동 검증 체크리스트는 `docs/manual-checklist.md`. 릴리스 후보마다 실기·스크린 리더·대용량 문서 성능 스팟체크 수행. 신규 UI는 반드시 axe E2E 통과가 수용 기준.
+- **페이즈 로드맵**: 0 초기화 → 1 레이아웃 → 2 에디터 → 3 프리뷰 → 4 서식 툴바 → 5 문서 저장소 → 6 내보내기/가져오기 → **7 최종 검증(완료)** → **포스트: 디자인 시스템**.
+- **원격 저장소**: https://github.com/chul1215/mdpro (public, `main` → `origin/main`). 최초 푸시 커밋 `e2e5dd6`, 최신 `36341b2`(디자인 시스템).
 
 ## Commands
 
@@ -59,8 +60,8 @@ E2E 스펙(`e2e/*.spec.ts`):
 - `roundtrip.spec.ts` — 새 문서→편집→제목 자동 추출(debounce)→전환→삭제 모달, `.md`/`.html` 다운로드 이벤트. 각 테스트 시작 시 `indexedDB.deleteDatabase('mdpro')`로 격리.
 - `mobile.spec.ts` — 375×812 모바일 + 768×1024 태블릿 뷰포트 스모크
 
-> 직전 작업: Phase 7 완료 — `npm run check` 175/175, `npm run build` 성공(메인 245.69KB gzipped), `npm run test:e2e` 8/8(smoke/a11y/roundtrip/mobile). axe-core로 WCAG 2.1 AA 위반 0 검증.
-> 다음 작업: 신규 기능 추가 시 E2E 시나리오와 axe 감사 범위를 확장. 수동 항목은 `docs/manual-checklist.md`.
+> 직전 작업: 디자인 시스템 커밋 이후 `npm run check` 175/175, `npm run test:e2e` 8/8, 빌드 메인 245.81KB gzipped.
+> 다음 작업: 신규 기능 추가 시 E2E 시나리오와 axe 감사 범위 확장. 수동 항목은 `docs/manual-checklist.md`.
 
 ## Architecture
 
@@ -188,8 +189,35 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - Cloudflare Pages 대시보드 설정: Framework preset `Vite`, Build command `npm run build`, Output `dist`. Node 20+ 필요.
 - IndexedDB(`mdpro`)는 origin 격리 — 동일 도메인에서만 데이터 공유.
 
-> 직전 작업: Phase 7 — axe-core 감사 통합 후 3가지 위반(CodeMirror aria-label / Sidebar timestamp 색상 대비 / DropdownMenu `<ul>` 구조) 수정. Sidebar `<aside>`에 `role="navigation"` 승격. 모바일 첫 방문 UX: `uiStore.sidebarOpen` 기본값을 `matchMedia('(max-width: 767px)')`로 분기. Cloudflare Pages `_redirects` 추가.
-> 다음 작업: 신규 기능 확장 시 기존 데이터 흐름 다이어그램과 `buildExtensions` 패턴을 먼저 확인. UI 컴포넌트는 TopBar/Toolbar/Sidebar의 포커스 링/aria 패턴을 재사용.
+### 디자인 시스템 (Apple 스타일)
+
+- **토큰 계층** — `tailwind.config.js`에서 정의:
+  - `colors.blue.*`를 Apple Blue 스케일로 덮어써 기존 `blue-500/600` 사용처가 자동 전환된다. **500=#0071e3**(CTA/포커스), **600=#0066cc**(라이트 링크), **400=#2997ff**(다크 링크). 새 shade를 추가하려면 이 스케일을 건드리지 말고 `apple.*`를 사용할 것.
+  - `colors.apple`: `bg=#f5f5f7`, `ink=#1d1d1f`, `blue/link/brightLink`.
+  - `colors.surface.1..5`: 다크 카드 계층(`#272729..#242426`). 배경 대비로 elevation을 표현할 때 사용.
+  - `fontFamily.display`/`sans`: `SF Pro Display`/`SF Pro Text` + `-apple-system` 폴백 + `Noto Sans KR`. **20px+는 `font-display`**, **19px 이하는 기본(`SF Pro Text`)**.
+  - `borderRadius.pill=980px`: Apple "Learn more" 시그니처 CTA용. 일반 컴포넌트는 `rounded-lg`/`xl` 유지.
+  - `boxShadow.apple=0 5px 30px 3px rgba(0,0,0,0.22)`: 부드러운 단일 shadow. 모달/드롭다운에만 적용.
+  - `letterSpacing.apple-tight(-0.022em)`: 전역 `body`에 `-0.016em`, `h1-h3`에 `-0.022em`이 기본 적용됨(`src/index.css`).
+  - `backdropBlur.glass=20px` + `backdropSaturate.glass=180`: TopBar 글래스 전용.
+- **전역 CSS** (`src/index.css`):
+  - `body { background: #f5f5f7; color: #1d1d1f }`, `html.dark body { background: #000 }`
+  - `:focus-visible { outline: 2px solid #0071e3; outline-offset: 2px }` — 전역 포커스 링.
+- **시그니처 패턴**:
+  - **TopBar 글래스**: `bg-[rgba(0,0,0,0.72)] backdrop-blur-glass backdrop-saturate-glass` + `relative z-40`. `backdrop-filter`가 새 스태킹 컨텍스트를 만들어 내부 드롭다운이 뒤의 메인 영역에 가려지므로 **`z-40` 명시 필수**.
+  - **활성 상태**: 사이드바 활성 항목은 솔리드 `bg-blue-500` + `text-white`. 호버/비활성은 `bg-black/5` 또는 `bg-white/5` 같은 투명도 레이어로 표현(borders 없이).
+  - **라벨 대비**: 작은 caps 라벨("에디터/프리뷰/문서")은 반드시 `text-apple-ink/70` / `text-white/70` 이상. **/50 이하는 axe AA 위반**을 일으켰음(3.2:1).
+- **CodeMirror 테마** (`src/components/Editor/cmTheme.ts`):
+  - 라이트: 배경 `#f5f5f7`, 텍스트 `#1d1d1f`, 커서/선택 Apple Blue
+  - 다크: 배경 `#000`, 텍스트 `#f5f5f7`, 커서/선택 bright Blue
+  - 활성 라인은 `rgba(0,0,0,0.03)` / `rgba(255,255,255,0.04)` — 구분선 대신 미세 틴트.
+- **금지 사항**:
+  - 새 강조색 추가 금지. 모든 interactive 요소는 `blue-500`(=Apple Blue) 계열만 사용.
+  - `border-*` 클래스로 구분선 새로 도입하지 말 것. 배경 대비 + shadow만으로 elevation 표현.
+  - 56px+ 히어로, 풀블리드 교차 섹션, pill 980px radius를 버튼 전반에 남용 금지 — 에디터 UX와 충돌.
+
+> 직전 작업: Apple 디자인 시스템 일괄 적용(`36341b2`). 토큰/전역 CSS + TopBar 글래스 + 레이아웃 단일배경화 + CodeMirror 팔레트 맞춤. axe 위반 1건(활성 항목 타임스탬프 white/85 대비 3.82) 수정 후 E2E 8/8 통과.
+> 다음 작업: 신규 UI는 `blue-500` + `apple.*` + `surface.*` 토큰만 사용. `text-*/50` 이하로 텍스트 대비 낮추지 말고 항상 `/70` 기준. `backdrop-filter` 넣는 컨테이너는 내부 팝오버의 z-index 스태킹을 반드시 검증.
 
 ## Project Rules
 
@@ -214,7 +242,14 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - 주석은 "왜"만 — "무엇"은 코드로 표현
 - 이모지 사용 금지 (사용자가 명시적으로 요청하지 않는 한)
 
-> 직전 작업: Phase 7 완료 — 단위 175/175 + E2E 8/8(smoke/a11y × 2/roundtrip × 3/mobile × 2). 자동 접근성 감사(axe WCAG 2.1 AA)는 초기/메뉴 오픈 두 상태에서 통과. HTML export 실물 렌더, 스크린 리더, 대용량 문서 성능은 `docs/manual-checklist.md`의 수동 영역.
+### 디자인 토큰 규칙
+
+- 색: `blue-500`(Apple Blue) 외에 새 강조색 금지. 표면은 `apple.bg` / `surface.1..5`, 텍스트는 `apple.ink`와 투명도(`/70`, `/85`) 조합.
+- 텍스트 대비: 라이트 배경 `text-apple-ink/70` 이상, 다크 배경 `text-white/70` 이상 유지(WCAG AA 4.5:1).
+- 새 카드/모달: `rounded-xl` + `shadow-apple` + `ring-1 ring-black/5` (dark: `ring-white/10`). 가시적 border 사용 금지.
+- 포커스 링: 컴포넌트 개별 정의 금지. 전역 `:focus-visible` 또는 기존 `focus-visible:ring-2 focus-visible:ring-blue-500` 패턴을 따를 것.
+
+> 직전 작업: Apple 디자인 시스템 적용 — 단위 175/175 + E2E 8/8. axe WCAG 2.1 AA 위반 0. 빌드 메인 245.81KB gzipped 유지.
 > 다음 작업: 릴리스 후보마다 `docs/manual-checklist.md` 10개 영역 수행 후 통과 여부를 커밋 메시지 또는 릴리스 노트에 기록.
 
 ## 전문 에이전트
@@ -226,5 +261,5 @@ API: `listDocuments()`(updatedAt desc), `getDocument(id)`, `createDocument(init?
 - **parser-engineer** — 마크다운 파싱/렌더링, CodeMirror 확장
 - **export-specialist** — HTML/MD 내보내기, IndexedDB 저장소
 
-> 직전 작업: Phase 7 — axe 감사, E2E 확대, README/LICENSE, Cloudflare Pages `_redirects`는 메인 에이전트 단독으로 처리. 접근성 위반 수정 범위가 여러 컴포넌트에 걸쳐 작았기 때문에 서브에이전트 분산 없이 집중 수정이 더 효율적이었음.
-> 다음 작업: 새 페이즈/기능이 필요할 때는 시그니처(타입/함수명)를 사전에 고정해 3~4개 서브에이전트를 병렬 실행. Phase 3~6 패턴이 성공적이었으므로 그대로 재사용.
+> 직전 작업: Apple 디자인 시스템 적용은 메인 에이전트 단독 처리. 토큰/글로벌 CSS/TopBar/모든 컴포넌트에 걸친 일관된 스타일 변경이라 `ui-designer` 병렬 분산은 오히려 토큰 정의 충돌 위험이 있어 집중 작업이 효율적이었음.
+> 다음 작업: 신규 페이즈/기능이 필요할 때는 시그니처(타입/함수명)를 사전에 고정해 3~4개 서브에이전트를 병렬 실행. 디자인 토큰은 이미 고정되어 있으므로 `ui-designer`는 패턴 반복만 수행하도록 지시할 것.
