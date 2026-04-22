@@ -83,13 +83,13 @@ export function DropOverlay() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/25 backdrop-blur-[2px]"
+      className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/15 backdrop-blur-sm"
     >
-      <div className="rounded-xl border-4 border-dashed border-blue-500 bg-white/95 px-10 py-8 shadow-2xl dark:bg-slate-800/95">
-        <p className="text-center text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="rounded-2xl bg-white/95 px-12 py-10 shadow-apple ring-1 ring-blue-500 dark:bg-surface-1/95">
+        <p className="text-center font-display text-[21px] font-semibold tracking-tight text-apple-ink dark:text-white">
           마크다운 파일을 놓으세요
         </p>
-        <p className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-center text-[13px] text-apple-ink/60 dark:text-white/60">
           .md / .markdown 파일을 지원합니다
         </p>
       </div>

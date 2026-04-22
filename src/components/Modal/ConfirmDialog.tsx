@@ -88,12 +88,12 @@ export function ConfirmDialog({
   };
 
   const confirmClass = destructive
-    ? 'bg-red-600 hover:bg-red-700 text-white'
-    : 'bg-blue-600 hover:bg-blue-700 text-white';
+    ? 'bg-red-600 hover:bg-red-500 text-white'
+    : 'bg-blue-500 hover:bg-blue-400 text-white';
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={handleBackdropClick}
       data-testid="confirm-dialog-backdrop"
     >
@@ -103,28 +103,28 @@ export function ConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={messageId}
         onKeyDown={handleDialogKeyDown}
-        className="w-full max-w-sm rounded-lg bg-white shadow-lg dark:bg-slate-800"
+        className="w-full max-w-sm rounded-xl bg-white shadow-apple ring-1 ring-black/5 dark:bg-surface-1 dark:ring-white/10"
       >
-        <div className="px-5 pb-3 pt-5">
+        <div className="px-6 pb-4 pt-6">
           <h2
             id={titleId}
-            className="text-base font-semibold text-slate-900 dark:text-slate-100"
+            className="font-display text-[17px] font-semibold tracking-tight text-apple-ink dark:text-white"
           >
             {title}
           </h2>
           <p
             id={messageId}
-            className="mt-2 text-sm text-slate-600 dark:text-slate-300"
+            className="mt-2 text-[13px] leading-relaxed text-apple-ink/70 dark:text-white/70"
           >
             {message}
           </p>
         </div>
-        <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3 dark:border-slate-700">
+        <div className="flex justify-end gap-2 px-6 pb-5 pt-2">
           <button
             ref={cancelRef}
             type="button"
             onClick={onCancel}
-            className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="rounded-lg px-4 py-1.5 text-[13px] font-medium text-apple-ink transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white dark:hover:bg-white/10"
           >
             {cancelLabel}
           </button>
@@ -133,7 +133,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             className={
-              'rounded px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
+              'rounded-lg px-4 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
               confirmClass
             }
           >

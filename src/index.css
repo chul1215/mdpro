@@ -10,8 +10,35 @@ body,
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-    Arial, 'Noto Sans KR', sans-serif;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'SF Pro Icons',
+    'Helvetica Neue', Helvetica, Arial, 'Noto Sans KR', sans-serif;
+  /* Apple 타이포그래피는 전 구간에서 미세한 네거티브 트래킹을 유지한다. */
+  letter-spacing: -0.016em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+}
+
+html.dark body {
+  background-color: #000000;
+  color: #f5f5f7;
+}
+
+/* 전역 포커스 링: Apple Blue 2px outline. focus-visible 있는 브라우저만 적용. */
+:focus-visible {
+  outline: 2px solid #0071e3;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* 큰 제목에는 Display 폰트를 사용한다. SF Pro Display는 20px+에서 최적. */
+h1,
+h2,
+h3 {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'SF Pro Icons',
+    'Helvetica Neue', Helvetica, Arial, 'Noto Sans KR', sans-serif;
+  letter-spacing: -0.022em;
 }
 
 /*
@@ -97,4 +124,3 @@ html.dark .hljs-deletion {
   color: #ffdcd7;
   background-color: #67060c;
 }
-

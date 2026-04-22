@@ -163,7 +163,7 @@ describe('ConfirmDialog', () => {
       />,
     );
     const confirm = screen.getByRole('button', { name: '확인' });
-    expect(confirm.className).toContain('bg-blue-600');
+    expect(confirm.className).toContain('bg-blue-500');
   });
 
   it('respects custom confirmLabel and cancelLabel', () => {

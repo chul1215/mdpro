@@ -181,7 +181,7 @@ export function Toolbar() {
       aria-label="서식 도구"
       aria-orientation="horizontal"
       onKeyDown={onKeyDown}
-      className="flex h-10 shrink-0 items-center gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 dark:border-slate-700 dark:bg-slate-900"
+      className="flex h-10 shrink-0 items-center gap-1 overflow-x-auto bg-apple-bg px-2 dark:bg-black"
     >
       {GROUPS.map((group, groupIndex) => {
         const groupStart = GROUPS.slice(0, groupIndex).reduce(
@@ -193,7 +193,7 @@ export function Toolbar() {
             {groupIndex > 0 && (
               <span
                 aria-hidden="true"
-                className="mx-1 h-5 w-px shrink-0 bg-slate-200 dark:bg-slate-700"
+                className="mx-1 h-5 w-px shrink-0 bg-black/10 dark:bg-white/10"
               />
             )}
             {group.items.map((item, localIndex) => {
@@ -212,7 +212,7 @@ export function Toolbar() {
                   disabled={disabled}
                   tabIndex={flatIndex === activeIndex ? 0 : -1}
                   onClick={() => handleClick(item, flatIndex)}
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:disabled:hover:bg-transparent dark:disabled:hover:text-slate-300"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-apple-ink/70 transition-colors hover:bg-black/5 hover:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-apple-ink/70 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white dark:disabled:hover:bg-transparent dark:disabled:hover:text-white/70"
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </button>

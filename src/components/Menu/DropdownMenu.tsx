@@ -156,7 +156,7 @@ export function DropdownMenu({
         title={triggerLabel}
         onClick={() => setOpen((v) => !v)}
         onKeyDown={onTriggerKeyDown}
-        className="shrink-0 rounded p-1.5 text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-300 dark:hover:bg-slate-800"
+        className="shrink-0 rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       >
         <TriggerIcon className="h-4 w-4" aria-hidden="true" />
       </button>
@@ -167,14 +167,14 @@ export function DropdownMenu({
           role="menu"
           aria-label={triggerLabel}
           onKeyDown={onMenuKeyDown}
-          className="absolute right-0 top-full z-40 mt-1 min-w-[12rem] overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
+          className="absolute right-0 top-full z-40 mt-2 min-w-[13rem] overflow-hidden rounded-xl bg-white/95 shadow-apple ring-1 ring-black/5 backdrop-blur-glass dark:bg-surface-1/95 dark:ring-white/10"
         >
           <div className="flex flex-col py-1">
             {items.map((item, index) => {
               const Icon = item.icon;
               const destructiveClass = item.destructive
-                ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40'
-                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700';
+                ? 'text-red-600 hover:bg-red-500/10 dark:text-red-400'
+                : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
               return (
                 <button
                   key={item.label}

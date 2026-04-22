@@ -70,30 +70,30 @@ export function Sidebar() {
         type="button"
         aria-label="사이드바 닫기"
         onClick={() => setSidebarOpen(false)}
-        className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
+        className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
       />
       <aside
         role="navigation"
         aria-label="문서 목록"
-        className="absolute left-0 top-12 z-40 flex h-[calc(100%-3rem)] w-64 flex-col border-r border-slate-200 bg-slate-50 shadow-lg md:static md:top-0 md:h-full md:w-56 md:shadow-none dark:border-slate-700 dark:bg-slate-950"
+        className="absolute left-0 top-12 z-40 flex h-[calc(100%-3rem)] w-64 flex-col bg-apple-bg shadow-apple md:static md:top-0 md:h-full md:w-56 md:shadow-none dark:bg-surface-5"
       >
-        <div className="flex flex-col gap-2 border-b border-slate-200 px-3 py-3 dark:border-slate-700">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <div className="flex flex-col gap-2 px-3 py-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-apple-ink/70 dark:text-white/70">
             문서
           </span>
           <button
             type="button"
             onClick={handleCreate}
             aria-label="새 문서"
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <FilePlus className="h-4 w-4" aria-hidden="true" />
             <span>새 문서</span>
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto p-2">
+        <nav className="flex-1 overflow-y-auto px-2 pb-3">
           {documents.length === 0 ? (
-            <p className="px-2 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+            <p className="px-2 py-4 text-center text-[12px] text-apple-ink/70 dark:text-white/70">
               아직 문서가 없습니다
             </p>
           ) : (
@@ -102,8 +102,8 @@ export function Sidebar() {
                 const active = doc.id === activeId;
                 const displayTitle = doc.title.trim() || '제목 없음';
                 const itemClass = active
-                  ? 'group flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm bg-blue-50 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100'
-                  : 'group flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800';
+                  ? 'group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] bg-blue-500 text-white'
+                  : 'group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
                 return (
                   <li key={doc.id}>
                     <div className="relative">
@@ -124,7 +124,14 @@ export function Sidebar() {
                         <span className="min-w-0 flex-1 truncate">
                           {displayTitle}
                         </span>
-                        <span className="shrink-0 text-[10px] text-slate-600 dark:text-slate-300">
+                        <span
+                          className={
+                            'shrink-0 text-[10px] tabular-nums ' +
+                            (active
+                              ? 'text-white'
+                              : 'text-apple-ink/70 dark:text-white/70')
+                          }
+                        >
                           {formatRelativeTime(doc.updatedAt)}
                         </span>
                       </button>
@@ -136,7 +143,7 @@ export function Sidebar() {
                           event.stopPropagation();
                           setDeleteTarget({ id: doc.id, title: displayTitle });
                         }}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 opacity-0 transition-opacity hover:bg-slate-200 hover:text-red-600 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 group-hover:opacity-100 group-focus-within:opacity-100 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-red-400"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-apple-ink/50 opacity-0 transition-opacity hover:bg-black/10 hover:text-red-600 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 group-hover:opacity-100 group-focus-within:opacity-100 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-red-400"
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>

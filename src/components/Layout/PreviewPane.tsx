@@ -66,9 +66,9 @@ export function PreviewPane() {
   return (
     <section
       aria-label="프리뷰"
-      className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50 dark:bg-slate-900"
+      className="flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-surface-5"
     >
-      <div className="border-b border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400">
+      <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-apple-ink/70 dark:text-white/70">
         프리뷰
       </div>
       <div
@@ -79,14 +79,14 @@ export function PreviewPane() {
         {error ? (
           <div
             role="alert"
-            className="m-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200"
+            className="m-4 rounded-lg bg-red-500/10 p-3 text-[13px] text-red-700 dark:text-red-300"
           >
             <strong>렌더 오류:</strong> {error}
           </div>
         ) : (
           <article
             ref={containerRef}
-            className="prose prose-slate max-w-none p-6 dark:prose-invert"
+            className="prose prose-slate max-w-none p-8 dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-blue-600 dark:prose-a:text-blue-400"
             // 파이프라인에서 이미 rehype-sanitize를 거친 HTML만 주입한다.
             dangerouslySetInnerHTML={{ __html: html }}
           />

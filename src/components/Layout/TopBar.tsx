@@ -22,6 +22,11 @@ const VIEW_MODES: ViewModeOption[] = [
   { value: 'preview', label: '프리뷰만', icon: Eye },
 ];
 
+// Apple 스타일 글래스: 라이트/다크 공통으로 translucent dark + backdrop blur.
+// 텍스트 대비를 위해 내용물은 항상 흰색 계열로 유지.
+const GLASS_BG =
+  'bg-[rgba(0,0,0,0.72)] backdrop-blur-glass backdrop-saturate-glass';
+
 export function TopBar() {
   const viewMode = useUIStore((s) => s.viewMode);
   const setViewMode = useUIStore((s) => s.setViewMode);
@@ -34,19 +39,21 @@ export function TopBar() {
   return (
     <header
       role="banner"
-      className="flex h-12 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-3 dark:border-slate-700 dark:bg-slate-900"
+      // backdrop-filter가 새 스태킹 컨텍스트를 만들어 내부 드롭다운 패널이
+      // 뒤쪽 paint 순서의 메인 영역에 가려진다. relative z-40로 상위에 고정.
+      className={`relative z-40 flex h-12 shrink-0 items-center gap-3 px-3 text-white ${GLASS_BG}`}
     >
       <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={toggleSidebar}
           aria-label="사이드바 토글"
-          className="rounded p-1.5 text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <PanelLeft className="h-4 w-4" />
         </button>
         {/* md 이상에서만 시각적으로 노출. 기존 E2E(toBeVisible)가 1280px 기준이라 md+ 에선 유지. */}
-        <h1 className="hidden text-sm font-semibold text-slate-900 md:block dark:text-slate-100">
+        <h1 className="hidden font-display text-[15px] font-semibold tracking-tight text-white md:block">
           MDPro
         </h1>
       </div>
@@ -57,13 +64,13 @@ export function TopBar() {
         placeholder="제목 없음"
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="min-w-0 flex-1 rounded bg-transparent px-2 py-1 text-sm text-slate-900 placeholder:text-slate-400 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+        className="min-w-0 flex-1 rounded-md bg-white/0 px-2 py-1 text-[13px] text-white placeholder:text-white/40 hover:bg-white/10 focus:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       />
 
       <div
         role="radiogroup"
         aria-label="뷰 모드"
-        className="flex shrink-0 items-center gap-0.5 rounded-md bg-slate-100 p-0.5 dark:bg-slate-800"
+        className="flex shrink-0 items-center gap-0.5 rounded-md bg-white/10 p-0.5"
       >
         {VIEW_MODES.map(({ value, label, icon: Icon }) => {
           const active = viewMode === value;
@@ -77,10 +84,10 @@ export function TopBar() {
               title={label}
               onClick={() => setViewMode(value)}
               className={
-                'flex items-center gap-1 rounded px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
+                'flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
                 (active
-                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100')
+                  ? 'bg-white text-black'
+                  : 'text-white/70 hover:text-white')
               }
             >
               <Icon className="h-3.5 w-3.5" />
@@ -97,7 +104,7 @@ export function TopBar() {
         onClick={toggleTheme}
         aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
         title={theme === 'dark' ? '라이트 모드' : '다크 모드'}
-        className="shrink-0 rounded p-1.5 text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-300 dark:hover:bg-slate-800"
+        className="shrink-0 rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       >
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
