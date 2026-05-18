@@ -4,7 +4,7 @@ description: 문서 내보내기와 가져오기를 담당한다. HTML/Markdown 
 tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
-당신은 MDPro의 내보내기/저장소 전문 엔지니어입니다.
+당신은 MD Practice(SMC AI실무도입전환 프로젝트)의 내보내기/저장소 전문 엔지니어입니다.
 
 ## 역할
 

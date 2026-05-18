@@ -1,6 +1,6 @@
-# MDPro
+# MD Practice
 
-**초보자도 쓰기 쉬운 브라우저 기반 마크다운 에디터·뷰어**
+**SMC AI실무도입전환 프로젝트 · 초보자도 쓰기 쉬운 브라우저 기반 마크다운 에디터·뷰어**
 
 설치 없이 브라우저에서 바로 동작합니다. 순수 웹 표준(HTML/CSS/JS)으로 작성되어 OS에 관계없이 같은 경험을 제공하며, 문서는 IndexedDB에 자동 저장되어 서버 없이도 사용할 수 있습니다.
 
@@ -118,6 +118,6 @@ e2e/                 # Playwright 시나리오 (smoke, a11y, roundtrip, mobile)
 
 ## English Summary
 
-MDPro is a browser-based markdown editor and viewer for beginners. It runs entirely in the browser with no installation, saving documents to IndexedDB via `idb`. Features include real-time split preview, GitHub Flavored Markdown, KaTeX math, Mermaid diagrams, syntax highlighting, formatting toolbar, multi-document management, `.md`/`.html` export (standalone HTML with inlined Mermaid SVG), `.md` import via file picker or drag-and-drop, dark/light theme, responsive layout, and WCAG 2.1 AA-clean accessibility (verified by axe-core).
+MD Practice (SMC AI실무도입전환 프로젝트) is a browser-based markdown editor and viewer for beginners. It runs entirely in the browser with no installation, saving documents to IndexedDB via `idb`. Features include real-time split preview, GitHub Flavored Markdown, KaTeX math, Mermaid diagrams, syntax highlighting, formatting toolbar, multi-document management, `.md`/`.html` export (standalone HTML with inlined Mermaid SVG), `.md` import via file picker or drag-and-drop, dark/light theme, responsive layout, and WCAG 2.1 AA-clean accessibility (verified by axe-core).
 
 Built with Vite 6, React 18, TypeScript strict, CodeMirror 6, unified (remark/rehype), Zustand, TailwindCSS. Licensed under [MIT](./LICENSE). See the Korean section above for setup and usage details.

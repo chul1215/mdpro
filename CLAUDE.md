@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-MDPro는 초보자도 쉽게 쓸 수 있는 브라우저 기반 마크다운 에디터/뷰어다. 실시간 분할 프리뷰, 자동 저장(IndexedDB), HTML/MD 내보내기, 다크/라이트 테마를 지원한다. 설치 없이 브라우저에서 동작하며 순수 웹 표준(HTML/CSS/JS)으로 작성되어 OS 독립적이다.
+MD Practice(SMC AI실무도입전환 프로젝트)는 초보자도 쉽게 쓸 수 있는 브라우저 기반 마크다운 에디터/뷰어다. 실시간 분할 프리뷰, 자동 저장(IndexedDB), HTML/MD 내보내기, 다크/라이트 테마를 지원한다. 설치 없이 브라우저에서 동작하며 순수 웹 표준(HTML/CSS/JS)으로 작성되어 OS 독립적이다.
 
 사용자 대상 문서는 `README.md`(한글+영문), 릴리스 전 수동 검증 체크리스트는 `docs/manual-checklist.md`. 이 파일은 **개발자/Claude 에이전트 전용** 내부 가이드다.
 
@@ -55,7 +55,7 @@ npx playwright install chromium                # 최초 실행 시 브라우저 
 ```
 
 E2E 스펙(`e2e/*.spec.ts`):
-- `smoke.spec.ts` — 앱 최초 로드 (MDPro heading 가시 확인)
+- `smoke.spec.ts` — 앱 최초 로드 (MD Practice heading 가시 확인)
 - `a11y.spec.ts` — axe-core로 초기/파일메뉴 오픈 상태 WCAG 2.1 AA 위반 0
 - `roundtrip.spec.ts` — 새 문서→편집→제목 자동 추출(debounce)→전환→삭제 모달, `.md`/`.html` 다운로드 이벤트. 각 테스트 시작 시 `indexedDB.deleteDatabase('mdpro')`로 격리.
 - `mobile.spec.ts` — 375×812 모바일 + 768×1024 태블릿 뷰포트 스모크

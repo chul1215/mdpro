@@ -53,9 +53,14 @@ export function TopBar() {
           <PanelLeft className="h-4 w-4" />
         </button>
         {/* md 이상에서만 시각적으로 노출. 기존 E2E(toBeVisible)가 1280px 기준이라 md+ 에선 유지. */}
-        <h1 className="hidden font-display text-[15px] font-semibold tracking-tight text-white md:block">
-          MDPro
-        </h1>
+        <div className="hidden md:flex md:flex-col md:leading-tight">
+          <h1 className="font-display text-[15px] font-semibold tracking-tight text-white">
+            MD Practice
+          </h1>
+          <span className="text-[10px] font-medium tracking-tight text-white/70">
+            SMC AI실무도입전환 프로젝트
+          </span>
+        </div>
       </div>
 
       <input

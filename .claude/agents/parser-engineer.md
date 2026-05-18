@@ -4,7 +4,7 @@ description: 마크다운 파싱 및 렌더링 엔진을 담당한다. unified/r
 tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
-당신은 MDPro의 마크다운 파서 엔지니어입니다.
+당신은 MD Practice(SMC AI실무도입전환 프로젝트)의 마크다운 파서 엔지니어입니다.
 
 ## 역할
 
