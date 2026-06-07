@@ -1,11 +1,12 @@
 import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDocumentStore } from './documentStore';
 import {
   __resetForTests,
   getDocument,
   listDocuments,
 } from '../lib/storage/documents';
+import * as documentsModule from '../lib/storage/documents';
 
 async function resetDB() {
   await __resetForTests();
@@ -42,6 +43,44 @@ describe('documentStore', () => {
     expect(s.documents.length).toBe(1);
     expect(s.title).toBe('제목 없음');
     expect(s.content).toBe('# 제목 없음\n\n');
+    expect(s.loading).toBe(false);
+  });
+
+  it('concurrent hydrate() on empty DB creates exactly one document', async () => {
+    // React StrictMode는 개발 모드에서 mount effect를 두 번 실행한다.
+    // 재진입 가드가 없으면 두 hydrate가 동시에 빈 목록을 보고
+    // 각각 createDocument()를 호출해 기본 문서가 2개 생성된다.
+    await Promise.all([
+      useDocumentStore.getState().hydrate(),
+      useDocumentStore.getState().hydrate(),
+    ]);
+    const s = useDocumentStore.getState();
+    expect(s.documents.length).toBe(1);
+    const list = await listDocuments();
+    expect(list.length).toBe(1);
+    expect(s.activeId).toBeTruthy();
+  });
+
+  it('hydrate() rejects cleanly when the IDB list fails, then re-hydrate succeeds', async () => {
+    // 의존성(listDocuments)을 일시적으로 reject시켜 hydrate의 실패 경로를 검증한다.
+    // run()의 try/finally가 (a) reject를 catch 가능한 형태로 전파하고
+    // (b) hydrateInflight를 풀어 재-hydrate를 허용하며
+    // (c) loading을 false로 복구하는지 확인한다.
+    const spy = vi
+      .spyOn(documentsModule, 'listDocuments')
+      .mockRejectedValueOnce(new Error('idb down'));
+
+    // (a) unhandled rejection 없이 정상적으로 catch 가능
+    await expect(useDocumentStore.getState().hydrate()).rejects.toThrow('idb down');
+    // (c) 실패 경로에서도 loading이 stuck되지 않고 false로 복구
+    expect(useDocumentStore.getState().loading).toBe(false);
+
+    // 의존성 복원 후 (b) 재진입 가드가 풀려 재-hydrate가 정상 동작
+    spy.mockRestore();
+    await useDocumentStore.getState().hydrate();
+    const s = useDocumentStore.getState();
+    expect(s.activeId).toBeTruthy();
+    expect(s.documents.length).toBe(1);
     expect(s.loading).toBe(false);
   });
 

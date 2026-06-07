@@ -36,6 +36,11 @@ let pendingId: string | null = null;
 let pendingRun: (() => Promise<void>) | null = null;
 let inflight: Promise<void> | null = null;
 
+// hydrate 재진입 가드. React StrictMode가 mount effect를 두 번 실행하면 두
+// hydrate가 동시에 빈 목록을 보고 각각 createDocument()를 호출해 기본 문서가
+// 중복 생성된다. 진행 중 Promise를 공유해 동시/중복 호출을 단일 실행으로 합친다.
+let hydrateInflight: Promise<void> | null = null;
+
 function clearTimer() {
   if (saveTimer !== null) {
     clearTimeout(saveTimer);
@@ -104,18 +109,34 @@ export const useDocumentStore = create<DocumentState>()(
       loading: false,
 
       hydrate: async () => {
-        set({ loading: true });
-        const list = await idbListDocuments();
-        set({ documents: list });
-        const persistedId = get().activeId;
-        if (persistedId && list.some((d) => d.id === persistedId)) {
-          await get().switchTo(persistedId);
-        } else if (list.length > 0) {
-          await get().switchTo(list[0].id);
-        } else {
-          await get().createDocument();
-        }
-        set({ loading: false });
+        // 이미 진행 중인 hydrate가 있으면 그 Promise를 공유한다(in-flight 공유).
+        if (hydrateInflight) return hydrateInflight;
+        // run()이 자체 try/finally로 정리를 책임진다. 별도 .finally() 체인을
+        // 만들면 (1) reject 시 그 버려진 Promise에서 unhandled rejection이 나고
+        // (2) loading:false가 성공 경로에서만 실행돼 reject 시 loading이 stuck된다.
+        // task 참조는 finally에서 hydrateInflight===task 비교에 필요하다. run의
+        // finally는 task 할당 이후(microtask)에만 실행되므로 클로저로 안전히 참조한다.
+        const run = async () => {
+          try {
+            set({ loading: true });
+            const list = await idbListDocuments();
+            set({ documents: list });
+            const persistedId = get().activeId;
+            if (persistedId && list.some((d) => d.id === persistedId)) {
+              await get().switchTo(persistedId);
+            } else if (list.length > 0) {
+              await get().switchTo(list[0].id);
+            } else {
+              await get().createDocument();
+            }
+          } finally {
+            set({ loading: false });
+            if (hydrateInflight === task) hydrateInflight = null;
+          }
+        };
+        const task = run();
+        hydrateInflight = task;
+        return task;
       },
 
       createDocument: async (init) => {
