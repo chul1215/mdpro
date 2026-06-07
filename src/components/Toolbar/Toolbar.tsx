@@ -129,7 +129,9 @@ export function Toolbar() {
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   // disabled -> enabled 전환 시 인덱스를 리셋하여 첫 버튼에서 시작하도록 한다.
+  // view(외부 에디터 상태) 변화에 roving 인덱스를 동기화하는 의도적 패턴이다.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (disabled) setActiveIndex(0);
   }, [disabled]);
 

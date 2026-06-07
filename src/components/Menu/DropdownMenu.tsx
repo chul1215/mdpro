@@ -80,6 +80,9 @@ export function DropdownMenu({
   // 동일 tick의 click(document) 리스너와 충돌이 없다 (mousedown만 구독하므로).
   useEffect(() => {
     if (!open) return;
+    // 외부 시스템(DOM 포커스)과 동기화하는 effect다. roving 인덱스를 첫 항목으로
+    // 맞추는 setState는 같은 포커스 이동의 일부이므로 cascading render가 아니다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(0);
     itemRefs.current[0]?.focus();
   }, [open]);
