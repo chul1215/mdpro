@@ -13,11 +13,11 @@ function readBlobAsText(blob: Blob): Promise<string> {
 type HtmlCapture = {
   blob: Blob | null;
   filename: string | null;
-  clickSpy: ReturnType<typeof vi.fn>;
+  clickSpy: ReturnType<typeof vi.fn<() => void>>;
 };
 
 function setupDownload(): HtmlCapture {
-  const capture: HtmlCapture = { blob: null, filename: null, clickSpy: vi.fn() };
+  const capture: HtmlCapture = { blob: null, filename: null, clickSpy: vi.fn<() => void>() };
   if (typeof URL.createObjectURL !== 'function') {
     (URL as unknown as { createObjectURL: (o: Blob) => string }).createObjectURL = () => '';
   }

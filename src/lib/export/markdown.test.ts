@@ -10,7 +10,7 @@ function readBlobAsText(blob: Blob): Promise<string> {
   });
 }
 
-type ClickSpy = ReturnType<typeof vi.fn>;
+type ClickSpy = ReturnType<typeof vi.fn<() => void>>;
 
 type DownloadCapture = {
   blob: Blob | null;
@@ -26,7 +26,7 @@ function setupDownload(): DownloadCapture {
     filename: null,
     objectUrlCreated: 0,
     objectUrlRevoked: 0,
-    clickSpy: vi.fn(),
+    clickSpy: vi.fn<() => void>(),
   };
 
   // jsdom은 URL.createObjectURL/revokeObjectURL을 구현하지 않으므로 stub을 먼저 심는다.
