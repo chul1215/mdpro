@@ -58,11 +58,14 @@ describe('Toolbar', () => {
     expect(screen.getByRole('button', { name: '인용구' })).toBeInTheDocument();
   });
 
-  it('disables every button when no editor view is registered', () => {
+  it('disables every formatting button when no editor view is registered', () => {
     render(<Toolbar />);
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThan(0);
-    for (const button of buttons) {
+    // 포커스 모드 버튼을 제외한 서식 버튼들만 비활성화 확인
+    const formattingButtons = screen
+      .getAllByRole('button')
+      .filter((b) => !b.getAttribute('aria-label')?.includes('포커스 모드'));
+    expect(formattingButtons.length).toBeGreaterThan(0);
+    for (const button of formattingButtons) {
       expect(button).toBeDisabled();
     }
   });

@@ -8,11 +8,15 @@ import { languages } from '@codemirror/language-data';
 import { useDocumentStore } from '../../stores/documentStore';
 import { useUIStore, type Theme } from '../../stores/uiStore';
 import { useEditorStore } from '../../stores/editorStore';
-import { lightTheme, darkTheme } from './cmTheme';
+import { lightTheme, darkTheme, focusModePlugin, type FocusModeConfig } from './cmTheme';
 import { toggleBold, toggleItalic } from '../../lib/editor/commands';
 
-function buildExtensions(themeCompartment: Compartment, theme: Theme): Extension[] {
-  return [
+function buildExtensions(
+  themeCompartment: Compartment,
+  theme: Theme,
+  focusConfig: FocusModeConfig
+): Extension[] {
+  const extensions: Extension[] = [
     lineNumbers(),
     highlightActiveLine(),
     history(),
@@ -40,6 +44,14 @@ function buildExtensions(themeCompartment: Compartment, theme: Theme): Extension
     EditorView.lineWrapping,
     EditorView.contentAttributes.of({ 'aria-label': '마크다운 편집기' }),
     themeCompartment.of(theme === 'dark' ? darkTheme : lightTheme),
+  ];
+
+  // 포커스 모드 플러그인 추가
+  if (focusConfig.enabled) {
+    extensions.push(focusModePlugin(focusConfig));
+  }
+
+  extensions.push(
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         const value = update.state.doc.toString();
@@ -48,8 +60,10 @@ function buildExtensions(themeCompartment: Compartment, theme: Theme): Extension
           store.setContent(value);
         }
       }
-    }),
-  ];
+    })
+  );
+
+  return extensions;
 }
 
 export function Editor() {
@@ -57,6 +71,13 @@ export function Editor() {
   const viewRef = useRef<EditorView | null>(null);
   const themeCompartmentRef = useRef(new Compartment());
   const theme = useUIStore((s) => s.theme);
+  const focusMode = useUIStore((s) => s.focusMode);
+
+  const focusConfig: FocusModeConfig = {
+    enabled: focusMode,
+    fadeOthers: true,
+    highlightCurrentLine: true,
+  };
 
   useEffect(() => {
     if (!hostRef.current) return;
@@ -64,7 +85,11 @@ export function Editor() {
     const initialContent = useDocumentStore.getState().content;
     const state = EditorState.create({
       doc: initialContent,
-      extensions: buildExtensions(themeCompartmentRef.current, useUIStore.getState().theme),
+      extensions: buildExtensions(
+        themeCompartmentRef.current,
+        useUIStore.getState().theme,
+        focusConfig
+      ),
     });
 
     const view = new EditorView({ state, parent: hostRef.current });
@@ -81,6 +106,7 @@ export function Editor() {
             extensions: buildExtensions(
               themeCompartmentRef.current,
               useUIStore.getState().theme,
+              focusConfig
             ),
           }),
         );
@@ -113,7 +139,7 @@ export function Editor() {
         theme === 'dark' ? darkTheme : lightTheme,
       ),
     });
-  }, [theme]);
+  }, [theme, focusMode]);
 
   return <div ref={hostRef} className="h-full w-full" data-testid="editor-host" />;
 }

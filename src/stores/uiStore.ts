@@ -8,11 +8,14 @@ type UIState = {
   theme: Theme;
   viewMode: ViewMode;
   sidebarOpen: boolean;
+  focusMode: boolean;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   setViewMode: (mode: ViewMode) => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
+  setFocusMode: (enabled: boolean) => void;
+  toggleFocusMode: () => void;
 };
 
 const prefersDark = () =>
@@ -30,12 +33,16 @@ export const useUIStore = create<UIState>()(
       theme: prefersDark() ? 'dark' : 'light',
       viewMode: 'split',
       sidebarOpen: !prefersMobile(),
+      focusMode: false,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
       setViewMode: (viewMode) => set({ viewMode }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+      setFocusMode: (focusMode) => set({ focusMode }),
+      toggleFocusMode: () =>
+        set((state) => ({ focusMode: !state.focusMode })),
     }),
     {
       name: 'mdpro-ui',
@@ -44,6 +51,7 @@ export const useUIStore = create<UIState>()(
         theme: state.theme,
         viewMode: state.viewMode,
         sidebarOpen: state.sidebarOpen,
+        focusMode: state.focusMode,
       }),
     },
   ),

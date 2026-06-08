@@ -14,9 +14,12 @@ import {
   Link as LinkIcon,
   Code2,
   Quote,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import type { EditorView } from '@codemirror/view';
 import { useEditorStore } from '../../stores/editorStore';
+import { useUIStore } from '../../stores/uiStore';
 import {
   toggleBold,
   toggleItalic,
@@ -109,6 +112,10 @@ const GROUPS: ToolbarGroup[] = [
       { id: 'quote', label: '인용구', icon: Quote, run: toggleQuote },
     ],
   },
+  {
+    id: 'view',
+    items: [],
+  },
 ];
 
 // 평면 리스트는 roving tabindex 인덱스 계산용. 그룹 구조는 시각적 구분만 담당.
@@ -121,6 +128,7 @@ function formatTitle(label: string, shortcut: string | undefined, mod: string): 
 
 export function Toolbar() {
   const view = useEditorStore((s) => s.view);
+  const focusMode = useUIStore((s) => s.focusMode);
   const mod = useModKey();
   const disabled = view === null;
 
@@ -186,6 +194,28 @@ export function Toolbar() {
       className="flex h-10 shrink-0 items-center gap-1 overflow-x-auto bg-apple-bg px-2 dark:bg-black"
     >
       {GROUPS.map((group, groupIndex) => {
+        // view 그룹은 에디터 뷰가 필요 없는 토글 버튼들 - 별도 렌더링
+        if (group.id === 'view') {
+          return (
+            <div key={group.id} className="flex items-center gap-0.5 ml-auto">
+              <span aria-hidden="true" className="mx-1 h-5 w-px shrink-0 bg-black/10 dark:bg-white/10" />
+              <button
+                type="button"
+                aria-label={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
+                title={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
+                onClick={() => useUIStore.getState().toggleFocusMode()}
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                  focusMode
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-apple-ink/70 hover:bg-black/5 hover:text-apple-ink dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white'
+                }`}
+              >
+                {focusMode ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+              </button>
+            </div>
+          );
+        }
+
         const groupStart = GROUPS.slice(0, groupIndex).reduce(
           (acc, g) => acc + g.items.length,
           0,
