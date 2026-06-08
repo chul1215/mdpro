@@ -3,12 +3,14 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type Theme = 'light' | 'dark';
 export type ViewMode = 'edit' | 'split' | 'preview';
+export type SidebarTab = 'documents' | 'outline';
 
 type UIState = {
   theme: Theme;
   viewMode: ViewMode;
   sidebarOpen: boolean;
   focusMode: boolean;
+  sidebarTab: SidebarTab;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   setViewMode: (mode: ViewMode) => void;
@@ -16,6 +18,7 @@ type UIState = {
   setSidebarOpen: (open: boolean) => void;
   setFocusMode: (enabled: boolean) => void;
   toggleFocusMode: () => void;
+  setSidebarTab: (tab: SidebarTab) => void;
 };
 
 const prefersDark = () =>
@@ -34,6 +37,7 @@ export const useUIStore = create<UIState>()(
       viewMode: 'split',
       sidebarOpen: !prefersMobile(),
       focusMode: false,
+      sidebarTab: 'documents',
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
@@ -43,6 +47,7 @@ export const useUIStore = create<UIState>()(
       setFocusMode: (focusMode) => set({ focusMode }),
       toggleFocusMode: () =>
         set((state) => ({ focusMode: !state.focusMode })),
+      setSidebarTab: (sidebarTab) => set({ sidebarTab }),
     }),
     {
       name: 'mdpro-ui',
@@ -52,6 +57,7 @@ export const useUIStore = create<UIState>()(
         viewMode: state.viewMode,
         sidebarOpen: state.sidebarOpen,
         focusMode: state.focusMode,
+        sidebarTab: state.sidebarTab,
       }),
     },
   ),
