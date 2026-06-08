@@ -5,10 +5,13 @@ import {
   Moon,
   Sun,
   PanelLeft,
+  Type,
 } from 'lucide-react';
 import { useUIStore, type ViewMode } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
 import { FileMenu } from './FileMenu';
+import { calculateStatistics, formatStatisticsSummary } from '../../utils/textStatistics';
+import { useMemo } from 'react';
 
 type ViewModeOption = {
   value: ViewMode;
@@ -35,12 +38,14 @@ export function TopBar() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const title = useDocumentStore((s) => s.title);
   const setTitle = useDocumentStore((s) => s.setTitle);
+  const content = useDocumentStore((s) => s.content);
+
+  const stats = useMemo(() => calculateStatistics(content), [content]);
+  const summary = useMemo(() => formatStatisticsSummary(stats), [stats]);
 
   return (
     <header
       role="banner"
-      // backdrop-filter가 새 스태킹 컨텍스트를 만들어 내부 드롭다운 패널이
-      // 뒤쪽 paint 순서의 메인 영역에 가려진다. relative z-40로 상위에 고정.
       className={`relative z-40 flex h-12 shrink-0 items-center gap-3 px-3 text-white ${GLASS_BG}`}
     >
       <div className="flex shrink-0 items-center gap-2">
@@ -52,7 +57,6 @@ export function TopBar() {
         >
           <PanelLeft className="h-4 w-4" />
         </button>
-        {/* md 이상에서만 시각적으로 노출. 기존 E2E(toBeVisible)가 1280px 기준이라 md+ 에선 유지. */}
         <div className="hidden md:flex md:flex-col md:leading-tight">
           <h1 className="font-display text-[15px] font-semibold tracking-tight text-white">
             MD Practice
@@ -71,6 +75,16 @@ export function TopBar() {
         onChange={(event) => setTitle(event.target.value)}
         className="min-w-0 flex-1 rounded-md bg-white/0 px-2 py-1 text-[13px] text-white placeholder:text-white/40 hover:bg-white/10 focus:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       />
+
+      {/* 통계 표시 */}
+      <div
+        aria-label="문서 통계"
+        className="hidden md:flex items-center gap-1.5 shrink-0 text-[11px] text-white/60 font-mono tabular-nums"
+        title={summary}
+      >
+        <Type className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <span>{summary}</span>
+      </div>
 
       <div
         role="radiogroup"
