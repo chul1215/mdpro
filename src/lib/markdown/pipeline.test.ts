@@ -123,3 +123,35 @@ describe('renderMarkdown - 기본 마크다운', () => {
     expect(typeof html).toBe('string');
   });
 });
+
+describe('renderMarkdown - 인라인 각주', () => {
+  it('renders ^[text] as a numbered inline footnote with a footnotes section', async () => {
+    const html = await renderMarkdown('본문입니다^[첫 번째 각주] 계속됩니다.');
+
+    expect(html).toContain('본문입니다');
+    expect(html).toMatch(/<sup[^>]*id="fnref-1"/);
+    expect(html).toMatch(/href="#fn-1"/);
+    expect(html).toMatch(/aria-label="각주 1"/);
+    expect(html).toMatch(/<section[^>]*class="footnotes"/);
+    expect(html).toMatch(/<li[^>]*id="fn-1"/);
+    expect(html).toContain('첫 번째 각주');
+    expect(html).toMatch(/href="#fnref-1"/);
+  });
+
+  it('numbers multiple inline footnotes in document order', async () => {
+    const html = await renderMarkdown('A^[alpha] B^[beta]');
+
+    expect(html).toMatch(/id="fnref-1"/);
+    expect(html).toMatch(/id="fnref-2"/);
+    expect(html).toMatch(/id="fn-1"/);
+    expect(html).toMatch(/id="fn-2"/);
+    expect(html.indexOf('alpha')).toBeLessThan(html.indexOf('beta'));
+  });
+
+  it('leaves escaped inline footnote syntax as literal text', async () => {
+    const html = await renderMarkdown('literal \\^[not a footnote]');
+
+    expect(html).toContain('^[not a footnote]');
+    expect(html).not.toContain('class="footnotes"');
+  });
+});

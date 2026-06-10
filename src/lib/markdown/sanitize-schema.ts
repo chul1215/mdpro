@@ -15,6 +15,7 @@ const passThroughMath = ['math', 'annotation', 'semantics', 'mrow', 'mi', 'mo', 
 
 export const sanitizeSchema: Schema = {
   ...defaultSchema,
+  clobberPrefix: '',
   attributes: {
     ...defaultSchema.attributes,
     // 모든 요소에 대해 className과 style을 허용 (기본 스키마는 제한적)
@@ -24,6 +25,8 @@ export const sanitizeSchema: Schema = {
       'style',
       // KaTeX 접근성 속성
       'ariaHidden',
+      'ariaLabel',
+      'id',
       'role',
     ],
     // KaTeX/MathML 속성
@@ -57,12 +60,29 @@ export const sanitizeSchema: Schema = {
     a: [
       ...(defaultSchema.attributes?.a ?? []),
       'className',
+      'ariaLabel',
       'target',
       'rel',
+    ],
+    sup: [
+      ...(defaultSchema.attributes?.sup ?? []),
+      'className',
+      'id',
+    ],
+    li: [
+      ...(defaultSchema.attributes?.li ?? []),
+      'id',
+    ],
+    section: [
+      ...(defaultSchema.attributes?.section ?? []),
+      'className',
+      'ariaLabel',
     ],
   },
   tagNames: [
     ...(defaultSchema.tagNames ?? []),
+    'section',
+    'sup',
     // KaTeX가 생성하는 MathML 태그
     ...passThroughMath,
   ],
