@@ -30,11 +30,15 @@ const prefersMobile = () =>
   typeof window !== 'undefined' &&
   window.matchMedia?.('(max-width: 767px)').matches;
 
+export function getInitialViewMode(isMobile = prefersMobile()): ViewMode {
+  return isMobile ? 'edit' : 'split';
+}
+
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
       theme: prefersDark() ? 'dark' : 'light',
-      viewMode: 'split',
+      viewMode: getInitialViewMode(),
       sidebarOpen: !prefersMobile(),
       focusMode: false,
       sidebarTab: 'documents',

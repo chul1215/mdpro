@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useUIStore } from './uiStore';
+import { getInitialViewMode, useUIStore } from './uiStore';
 
 describe('uiStore', () => {
   beforeEach(() => {
@@ -32,5 +32,10 @@ describe('uiStore', () => {
     useUIStore.getState().setTheme('dark');
     const persisted = JSON.parse(localStorage.getItem('mdpro-ui') ?? '{}');
     expect(persisted.state.theme).toBe('dark');
+  });
+
+  it('defaults to edit-only view on mobile-width screens', () => {
+    expect(getInitialViewMode(true)).toBe('edit');
+    expect(getInitialViewMode(false)).toBe('split');
   });
 });

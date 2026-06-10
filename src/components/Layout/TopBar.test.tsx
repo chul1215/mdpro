@@ -96,4 +96,26 @@ describe('TopBar', () => {
     render(<TopBar />);
     expect(screen.getByRole('button', { name: '파일 메뉴' })).toBeInTheDocument();
   });
+
+  it('uses larger mobile touch targets for primary toolbar controls', () => {
+    render(<TopBar />);
+
+    expect(screen.getByRole('button', { name: '사이드바 토글' })).toHaveClass('h-11', 'w-11');
+    expect(screen.getByRole('radio', { name: '편집만' })).toHaveClass('h-11', 'min-w-11');
+  });
+
+  it('moves secondary actions into a mobile more menu', async () => {
+    const user = userEvent.setup();
+    render(<TopBar />);
+
+    expect(screen.getByRole('button', { name: '모바일 더보기 메뉴' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '문서 보내기' })).toHaveClass('hidden', 'sm:inline-flex');
+    expect(screen.getByRole('button', { name: /모드로 전환/ })).toHaveClass('hidden', 'sm:inline-flex');
+
+    await user.click(screen.getByRole('button', { name: '모바일 더보기 메뉴' }));
+
+    expect(screen.getByRole('menu', { name: '모바일 작업 메뉴' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: '문서 보내기' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /다크 모드로 전환/ })).toBeInTheDocument();
+  });
 });

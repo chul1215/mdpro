@@ -190,8 +190,9 @@ export function Toolbar() {
       role="toolbar"
       aria-label="서식 도구"
       aria-orientation="horizontal"
+      data-overflow-hint="true"
       onKeyDown={onKeyDown}
-      className="flex h-11 shrink-0 items-center overflow-x-auto overflow-y-hidden bg-apple-bg px-2 dark:bg-black"
+      className="relative flex h-12 shrink-0 items-center overflow-x-auto overflow-y-hidden bg-apple-bg px-2 after:pointer-events-none after:sticky after:right-0 after:ml-[-2rem] after:h-full after:w-8 after:shrink-0 after:bg-gradient-to-l after:from-apple-bg after:to-transparent dark:bg-black dark:after:from-black sm:h-11"
     >
       <div className="flex w-max min-w-full items-center gap-1">
         {GROUPS.map((group, groupIndex) => {
@@ -205,7 +206,7 @@ export function Toolbar() {
                   aria-label={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
                   title={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
                   onClick={() => useUIStore.getState().toggleFocusMode()}
-                  className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                  className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8 ${
                     focusMode
                       ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                       : 'text-apple-ink/70 hover:bg-black/5 hover:text-apple-ink dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white'
@@ -245,7 +246,7 @@ export function Toolbar() {
                     disabled={disabled}
                     tabIndex={flatIndex === activeIndex ? 0 : -1}
                     onClick={() => handleClick(item, flatIndex)}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-apple-ink/70 transition-colors hover:bg-black/5 hover:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-apple-ink/70 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white dark:disabled:hover:bg-transparent dark:disabled:hover:text-white/70"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-apple-ink/70 transition-colors hover:bg-black/5 hover:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-apple-ink/70 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white dark:disabled:hover:bg-transparent dark:disabled:hover:text-white/70 sm:h-8 sm:w-8"
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </button>

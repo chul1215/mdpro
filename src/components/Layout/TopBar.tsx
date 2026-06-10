@@ -7,6 +7,7 @@ import {
   PanelLeft,
   Send,
   Type,
+  MoreHorizontal,
 } from 'lucide-react';
 import { useUIStore, type ViewMode } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
@@ -45,6 +46,7 @@ export function TopBar() {
   const content = useDocumentStore((s) => s.content);
   const user = useAuthStore((s) => s.user);
   const [shareOpen, setShareOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const stats = useMemo(() => calculateStatistics(content), [content]);
   const summary = useMemo(() => formatStatisticsSummary(stats), [stats]);
@@ -59,7 +61,7 @@ export function TopBar() {
           type="button"
           onClick={toggleSidebar}
           aria-label="사이드바 토글"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
         >
           <PanelLeft className="h-4 w-4" />
         </button>
@@ -109,7 +111,7 @@ export function TopBar() {
               title={label}
               onClick={() => setViewMode(value)}
               className={
-                'flex h-8 min-w-8 items-center justify-center gap-1 rounded-md px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-2.5 ' +
+                'flex h-11 min-w-11 items-center justify-center gap-1 rounded-md px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:min-w-8 sm:px-2.5 ' +
                 (active
                   ? 'bg-white text-black'
                   : 'text-white/70 hover:text-white')
@@ -129,19 +131,64 @@ export function TopBar() {
         onClick={() => setShareOpen(true)}
         aria-label="문서 보내기"
         title="문서 보내기"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
+        className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:inline-flex sm:h-8 sm:w-8"
       >
         <Send className="h-4 w-4" aria-hidden="true" />
       </button>
 
       <AccountMenu />
 
+      <div className="relative shrink-0 sm:hidden">
+        <button
+          type="button"
+          aria-label="모바일 더보기 메뉴"
+          aria-haspopup="menu"
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        </button>
+        {mobileMenuOpen ? (
+          <div
+            role="menu"
+            aria-label="모바일 작업 메뉴"
+            className="absolute right-0 top-full z-50 mt-2 min-w-44 overflow-hidden rounded-xl bg-white/95 py-1 text-sm text-apple-ink shadow-apple ring-1 ring-black/5 backdrop-blur-glass dark:bg-surface-1/95 dark:text-white dark:ring-white/10"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setShareOpen(true);
+              }}
+              className="flex min-h-11 w-full items-center gap-2 px-3 text-left transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/10"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
+              문서 보내기
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                toggleTheme();
+              }}
+              className="flex min-h-11 w-full items-center gap-2 px-3 text-left transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/10"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+            </button>
+          </div>
+        ) : null}
+      </div>
+
       <button
         type="button"
         onClick={toggleTheme}
         aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
         title={theme === 'dark' ? '라이트 모드' : '다크 모드'}
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
+        className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:inline-flex sm:h-8 sm:w-8"
       >
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
