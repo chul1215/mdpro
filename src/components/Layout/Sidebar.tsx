@@ -1,12 +1,25 @@
 import { useCallback, useState } from 'react';
-import { FilePlus, FileText, List, Trash2 } from 'lucide-react';
-import { useUIStore } from '../../stores/uiStore';
+import { BookUser, FilePlus, FileText, Inbox, List, Trash2 } from 'lucide-react';
+import { useUIStore, type SidebarTab } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
 import { ConfirmDialog } from '../Modal/ConfirmDialog';
 import { OutlinePanel } from './OutlinePanel';
+import { InboxPanel } from '../Sharing/InboxPanel';
+import { AddressBookPanel } from '../Sharing/AddressBookPanel';
+import { useAuthStore } from '../../stores/authStore';
 
-type TabType = 'documents' | 'outline';
 type DeleteTarget = { id: string; title: string };
+
+const TABS: Array<{
+  value: SidebarTab;
+  label: string;
+  icon: typeof FileText;
+}> = [
+  { value: 'documents', label: '문서', icon: FileText },
+  { value: 'outline', label: '아웃라인', icon: List },
+  { value: 'inbox', label: '받은함', icon: Inbox },
+  { value: 'addressBook', label: '주소록', icon: BookUser },
+];
 
 // 상대 시간 포맷. 초/분/시간/월일/연월일 단위로 점증적으로 덜 세밀해진다.
 function formatRelativeTime(ts: number, now: number = Date.now()): string {
@@ -44,6 +57,7 @@ export function Sidebar() {
   const createDocument = useDocumentStore((s) => s.createDocument);
   const switchTo = useDocumentStore((s) => s.switchTo);
   const removeDocument = useDocumentStore((s) => s.removeDocument);
+  const user = useAuthStore((s) => s.user);
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
 
@@ -69,10 +83,10 @@ export function Sidebar() {
   }, [deleteTarget, removeDocument]);
 
   const handleTabClick = useCallback(
-    (tab: TabType) => {
+    (tab: SidebarTab) => {
       setSidebarTab(tab);
       // 아웃라인 탭으로 전환 시 사이드바가 열려있어야 함
-      if (tab === 'outline') {
+      if (tab === 'outline' || tab === 'inbox' || tab === 'addressBook') {
         setSidebarOpen(true);
       }
     },
@@ -85,16 +99,24 @@ export function Sidebar() {
         type="button"
         aria-label="사이드바 닫기"
         onClick={() => setSidebarOpen(false)}
-        className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+        className="absolute inset-0 z-20 bg-black/40 backdrop-blur-sm md:hidden"
       />
       <aside
         role="navigation"
-        aria-label={sidebarTab === 'documents' ? '문서 목록' : '문서 아웃라인'}
-        className="absolute left-0 top-12 z-40 flex h-[calc(100%-3rem)] w-64 flex-col bg-apple-bg shadow-apple md:static md:top-0 md:h-full md:w-56 md:shadow-none dark:bg-surface-5"
+        aria-label={
+          sidebarTab === 'documents'
+            ? '문서 목록'
+            : sidebarTab === 'outline'
+              ? '문서 아웃라인'
+              : sidebarTab === 'inbox'
+                ? '받은 문서함'
+                : '주소록'
+        }
+        className="absolute inset-y-0 left-0 z-30 flex w-[min(18rem,calc(100vw-2rem))] flex-col bg-apple-bg shadow-apple md:static md:h-full md:w-56 md:shrink-0 md:shadow-none dark:bg-surface-5"
       >
         {/* 탭 네비게이션 */}
         <div className="flex border-b border-apple-border dark:border-white/10">
-          {(['documents', 'outline'] as TabType[]).map((tab) => (
+          {TABS.map(({ value: tab, label, icon: Icon }) => (
             <button
               key={tab}
               type="button"
@@ -108,17 +130,8 @@ export function Sidebar() {
                   : 'text-apple-ink/70 hover:text-apple-ink dark:text-white/70 dark:hover:text-white'
               }`}
             >
-              {tab === 'documents' ? (
-                <>
-                  <FileText className="h-4 w-4" aria-hidden="true" />
-                  <span>문서</span>
-                </>
-              ) : (
-                <>
-                  <List className="h-4 w-4" aria-hidden="true" />
-                  <span>아웃라인</span>
-                </>
-              )}
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              <span>{label}</span>
             </button>
           ))}
         </div>
@@ -149,11 +162,11 @@ export function Sidebar() {
                       const active = doc.id === activeId;
                       const displayTitle = doc.title.trim() || '제목 없음';
                       const itemClass = active
-                        ? 'group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] bg-blue-500 text-white'
-                        : 'group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
+                        ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 pr-8 text-left text-[13px] bg-blue-500 text-white'
+                        : 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 pr-8 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
                       return (
                         <li key={doc.id}>
-                          <div className="relative">
+                          <div className="group relative">
                             <button
                               type="button"
                               aria-label={displayTitle}
@@ -207,6 +220,14 @@ export function Sidebar() {
 
         <div role="tabpanel" id="outline-panel" className="flex-1 overflow-hidden">
           {sidebarTab === 'outline' && <OutlinePanel />}
+        </div>
+
+        <div role="tabpanel" id="inbox-panel" className="flex-1 overflow-hidden">
+          {sidebarTab === 'inbox' && <InboxPanel user={user} />}
+        </div>
+
+        <div role="tabpanel" id="addressBook-panel" className="flex-1 overflow-hidden">
+          {sidebarTab === 'addressBook' && <AddressBookPanel />}
         </div>
 
         <ConfirmDialog

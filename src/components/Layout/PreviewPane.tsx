@@ -68,11 +68,11 @@ export function PreviewPane() {
       aria-label="프리뷰"
       className="flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-surface-5"
     >
-      <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-apple-ink/70 dark:text-white/70">
+      <div className="shrink-0 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-apple-ink/70 sm:px-4 dark:text-white/70">
         프리뷰
       </div>
       <div
-        className="flex-1 overflow-auto"
+        className="min-h-0 flex-1 overflow-auto"
         aria-live="polite"
         aria-busy={false}
       >
@@ -86,7 +86,7 @@ export function PreviewPane() {
         ) : (
           <article
             ref={containerRef}
-            className="prose prose-slate max-w-none p-8 dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-blue-600 dark:prose-a:text-blue-400"
+            className="prose prose-slate max-w-none p-4 sm:p-8 dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-a:text-blue-600 dark:prose-a:text-blue-400"
             // 파이프라인에서 이미 rehype-sanitize를 거친 HTML만 주입한다.
             dangerouslySetInnerHTML={{ __html: html }}
           />

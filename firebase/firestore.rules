@@ -1,0 +1,38 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email is string;
+    }
+
+    function normalizedEmail() {
+      return lower(request.auth.token.email);
+    }
+
+    match /shares/{shareId} {
+      allow create: if signedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderEmail == normalizedEmail()
+        && request.resource.data.recipientEmail is string
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.sourceDocumentId is string
+        && request.resource.data.status == 'pending';
+
+      allow read: if signedIn()
+        && (
+          resource.data.senderUid == request.auth.uid
+          || resource.data.recipientEmail == normalizedEmail()
+        );
+
+      allow update: if signedIn()
+        && resource.data.recipientEmail == normalizedEmail()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'acceptedAt'])
+        && request.resource.data.status in ['accepted', 'declined'];
+
+      allow delete: if false;
+    }
+  }
+}

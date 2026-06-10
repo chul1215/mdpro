@@ -14,9 +14,9 @@ export function Layout() {
     <div className="flex h-full w-full flex-col bg-apple-bg text-apple-ink dark:bg-black dark:text-white">
       <TopBar />
       <Toolbar />
-      <div className="relative flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
         {sidebarOpen && <Sidebar />}
-        <main className="flex min-w-0 flex-1 flex-col md:flex-row">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col md:flex-row">
           {viewMode !== 'preview' && <EditorPane />}
           {viewMode !== 'edit' && <PreviewPane />}
         </main>

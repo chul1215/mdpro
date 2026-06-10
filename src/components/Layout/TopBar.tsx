@@ -5,13 +5,17 @@ import {
   Moon,
   Sun,
   PanelLeft,
+  Send,
   Type,
 } from 'lucide-react';
 import { useUIStore, type ViewMode } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
 import { FileMenu } from './FileMenu';
 import { calculateStatistics, formatStatisticsSummary } from '../../utils/textStatistics';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { AccountMenu } from '../Auth/AccountMenu';
+import { ShareDocumentDialog } from '../Sharing/ShareDocumentDialog';
+import { useAuthStore } from '../../stores/authStore';
 
 type ViewModeOption = {
   value: ViewMode;
@@ -39,6 +43,8 @@ export function TopBar() {
   const title = useDocumentStore((s) => s.title);
   const setTitle = useDocumentStore((s) => s.setTitle);
   const content = useDocumentStore((s) => s.content);
+  const user = useAuthStore((s) => s.user);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const stats = useMemo(() => calculateStatistics(content), [content]);
   const summary = useMemo(() => formatStatisticsSummary(stats), [stats]);
@@ -46,14 +52,14 @@ export function TopBar() {
   return (
     <header
       role="banner"
-      className={`relative z-40 flex h-12 shrink-0 items-center gap-3 px-3 text-white ${GLASS_BG}`}
+      className={`relative z-40 flex min-h-12 shrink-0 flex-wrap items-center gap-2 px-2 py-2 text-white sm:flex-nowrap sm:gap-3 sm:px-3 sm:py-0 ${GLASS_BG}`}
     >
       <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={toggleSidebar}
           aria-label="사이드바 토글"
-          className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
         >
           <PanelLeft className="h-4 w-4" />
         </button>
@@ -73,7 +79,7 @@ export function TopBar() {
         placeholder="제목 없음"
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="min-w-0 flex-1 rounded-md bg-white/0 px-2 py-1 text-[13px] text-white placeholder:text-white/40 hover:bg-white/10 focus:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="order-2 min-w-0 basis-full rounded-md bg-white/0 px-2 py-1 text-[13px] text-white placeholder:text-white/40 hover:bg-white/10 focus:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:order-none sm:flex-1 sm:basis-auto"
       />
 
       {/* 통계 표시 */}
@@ -89,7 +95,7 @@ export function TopBar() {
       <div
         role="radiogroup"
         aria-label="뷰 모드"
-        className="flex shrink-0 items-center gap-0.5 rounded-md bg-white/10 p-0.5"
+        className="ml-auto flex shrink-0 items-center gap-0.5 rounded-md bg-white/10 p-0.5 sm:ml-0"
       >
         {VIEW_MODES.map(({ value, label, icon: Icon }) => {
           const active = viewMode === value;
@@ -103,7 +109,7 @@ export function TopBar() {
               title={label}
               onClick={() => setViewMode(value)}
               className={
-                'flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
+                'flex h-8 min-w-8 items-center justify-center gap-1 rounded-md px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-2.5 ' +
                 (active
                   ? 'bg-white text-black'
                   : 'text-white/70 hover:text-white')
@@ -120,13 +126,31 @@ export function TopBar() {
 
       <button
         type="button"
+        onClick={() => setShareOpen(true)}
+        aria-label="문서 보내기"
+        title="문서 보내기"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
+      >
+        <Send className="h-4 w-4" aria-hidden="true" />
+      </button>
+
+      <AccountMenu />
+
+      <button
+        type="button"
         onClick={toggleTheme}
         aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
         title={theme === 'dark' ? '라이트 모드' : '다크 모드'}
-        className="shrink-0 rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
       >
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
+
+      <ShareDocumentDialog
+        open={shareOpen}
+        user={user}
+        onClose={() => setShareOpen(false)}
+      />
     </header>
   );
 }

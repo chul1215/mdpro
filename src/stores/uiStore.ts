@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type Theme = 'light' | 'dark';
 export type ViewMode = 'edit' | 'split' | 'preview';
-export type SidebarTab = 'documents' | 'outline';
+export type SidebarTab = 'documents' | 'outline' | 'inbox' | 'addressBook';
 
 type UIState = {
   theme: Theme;

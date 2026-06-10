@@ -191,68 +191,70 @@ export function Toolbar() {
       aria-label="서식 도구"
       aria-orientation="horizontal"
       onKeyDown={onKeyDown}
-      className="flex h-10 shrink-0 items-center gap-1 overflow-x-auto bg-apple-bg px-2 dark:bg-black"
+      className="flex h-11 shrink-0 items-center overflow-x-auto overflow-y-hidden bg-apple-bg px-2 dark:bg-black"
     >
-      {GROUPS.map((group, groupIndex) => {
-        // view 그룹은 에디터 뷰가 필요 없는 토글 버튼들 - 별도 렌더링
-        if (group.id === 'view') {
+      <div className="flex w-max min-w-full items-center gap-1">
+        {GROUPS.map((group, groupIndex) => {
+          // view 그룹은 에디터 뷰가 필요 없는 토글 버튼들 - 별도 렌더링
+          if (group.id === 'view') {
+            return (
+              <div key={group.id} className="ml-auto flex items-center gap-0.5">
+                <span aria-hidden="true" className="mx-1 h-5 w-px shrink-0 bg-black/10 dark:bg-white/10" />
+                <button
+                  type="button"
+                  aria-label={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
+                  title={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
+                  onClick={() => useUIStore.getState().toggleFocusMode()}
+                  className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                    focusMode
+                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                      : 'text-apple-ink/70 hover:bg-black/5 hover:text-apple-ink dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white'
+                  }`}
+                >
+                  {focusMode ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                </button>
+              </div>
+            );
+          }
+
+          const groupStart = GROUPS.slice(0, groupIndex).reduce(
+            (acc, g) => acc + g.items.length,
+            0,
+          );
           return (
-            <div key={group.id} className="flex items-center gap-0.5 ml-auto">
-              <span aria-hidden="true" className="mx-1 h-5 w-px shrink-0 bg-black/10 dark:bg-white/10" />
-              <button
-                type="button"
-                aria-label={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
-                title={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
-                onClick={() => useUIStore.getState().toggleFocusMode()}
-                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                  focusMode
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-apple-ink/70 hover:bg-black/5 hover:text-apple-ink dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white'
-                }`}
-              >
-                {focusMode ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
-              </button>
+            <div key={group.id} className="flex items-center gap-0.5">
+              {groupIndex > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="mx-1 h-5 w-px shrink-0 bg-black/10 dark:bg-white/10"
+                />
+              )}
+              {group.items.map((item, localIndex) => {
+                const flatIndex = groupStart + localIndex;
+                const Icon = item.icon;
+                const title = formatTitle(item.label, item.shortcut, mod);
+                return (
+                  <button
+                    key={item.id}
+                    ref={(el) => {
+                      buttonRefs.current[flatIndex] = el;
+                    }}
+                    type="button"
+                    aria-label={item.label}
+                    title={title}
+                    disabled={disabled}
+                    tabIndex={flatIndex === activeIndex ? 0 : -1}
+                    onClick={() => handleClick(item, flatIndex)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-apple-ink/70 transition-colors hover:bg-black/5 hover:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-apple-ink/70 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white dark:disabled:hover:bg-transparent dark:disabled:hover:text-white/70"
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                );
+              })}
             </div>
           );
-        }
-
-        const groupStart = GROUPS.slice(0, groupIndex).reduce(
-          (acc, g) => acc + g.items.length,
-          0,
-        );
-        return (
-          <div key={group.id} className="flex items-center gap-0.5">
-            {groupIndex > 0 && (
-              <span
-                aria-hidden="true"
-                className="mx-1 h-5 w-px shrink-0 bg-black/10 dark:bg-white/10"
-              />
-            )}
-            {group.items.map((item, localIndex) => {
-              const flatIndex = groupStart + localIndex;
-              const Icon = item.icon;
-              const title = formatTitle(item.label, item.shortcut, mod);
-              return (
-                <button
-                  key={item.id}
-                  ref={(el) => {
-                    buttonRefs.current[flatIndex] = el;
-                  }}
-                  type="button"
-                  aria-label={item.label}
-                  title={title}
-                  disabled={disabled}
-                  tabIndex={flatIndex === activeIndex ? 0 : -1}
-                  onClick={() => handleClick(item, flatIndex)}
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-apple-ink/70 transition-colors hover:bg-black/5 hover:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-apple-ink/70 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white dark:disabled:hover:bg-transparent dark:disabled:hover:text-white/70"
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                </button>
-              );
-            })}
-          </div>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 }
