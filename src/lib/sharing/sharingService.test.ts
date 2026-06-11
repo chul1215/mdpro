@@ -86,7 +86,7 @@ describe('sharingService', () => {
     ).rejects.toThrow(/로그인/);
   });
 
-  it('lists inbox shares for the signed-in email', async () => {
+  it('lists inbox shares for the signed-in email sorted by newest first without a composite index', async () => {
     getDocs.mockResolvedValueOnce({
       docs: [
         {
@@ -102,6 +102,19 @@ describe('sharingService', () => {
             createdAt: { toMillis: () => 1234 },
           }),
         },
+        {
+          id: 'share-2',
+          data: () => ({
+            senderUid: 'sender-2',
+            senderEmail: 'sender2@example.com',
+            recipientEmail: 'user@example.com',
+            title: '최신 문서',
+            content: '# 최신 문서',
+            sourceDocumentId: 'doc-2',
+            status: 'pending',
+            createdAt: { toMillis: () => 9999 },
+          }),
+        },
       ],
     });
     const { listInboxShares } = await import('./sharingService');
@@ -109,7 +122,8 @@ describe('sharingService', () => {
     const shares = await listInboxShares({ uid: 'user-1', email: 'USER@example.com', displayName: null, photoURL: null });
 
     expect(where).toHaveBeenCalledWith('recipientEmail', '==', 'user@example.com');
-    expect(shares[0]).toMatchObject({ id: 'share-1', title: '받은 문서', createdAt: 1234 });
+    expect(orderBy).not.toHaveBeenCalled();
+    expect(shares.map((share) => share.id)).toEqual(['share-2', 'share-1']);
   });
 
   it('marks a share as accepted', async () => {

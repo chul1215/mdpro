@@ -3,7 +3,6 @@ import {
   collection,
   doc,
   getDocs,
-  orderBy,
   query,
   serverTimestamp,
   updateDoc,
@@ -105,10 +104,11 @@ export async function listInboxShares(user: AppUser | null): Promise<ShareRecord
   const inboxQuery = query(
     collection(getFirestoreDb(), 'shares'),
     where('recipientEmail', '==', recipientEmail),
-    orderBy('createdAt', 'desc'),
   );
   const snapshot = await getDocs(inboxQuery);
-  return snapshot.docs.map((item) => mapShare(item));
+  return snapshot.docs
+    .map((item) => mapShare(item))
+    .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export async function acceptShare(shareId: string): Promise<void> {

@@ -12,7 +12,6 @@ import {
   collection,
   doc,
   getDocs,
-  orderBy,
   query,
   serverTimestamp,
   updateDoc,
@@ -68,7 +67,7 @@ describeWithFirestoreEmulator('firestore sharing rules', () => {
     );
   });
 
-  it('allows the recipient to list inbox shares ordered by creation time', async () => {
+  it('allows the recipient to list inbox shares without requiring a composite index', async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       await addDoc(collection(context.firestore(), 'shares'), {
         senderUid: 'sender-1',
@@ -86,7 +85,6 @@ describeWithFirestoreEmulator('firestore sharing rules', () => {
     const inboxQuery = query(
       collection(db, 'shares'),
       where('recipientEmail', '==', 'roomi0120@gmail.com'),
-      orderBy('createdAt', 'desc'),
     );
 
     await assertSucceeds(getDocs(inboxQuery));
