@@ -6,14 +6,10 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email is string;
     }
 
-    function normalizedEmail() {
-      return lower(request.auth.token.email);
-    }
-
     match /shares/{shareId} {
       allow create: if signedIn()
         && request.resource.data.senderUid == request.auth.uid
-        && request.resource.data.senderEmail == normalizedEmail()
+        && request.resource.data.senderEmail == request.auth.token.email
         && request.resource.data.recipientEmail is string
         && request.resource.data.title is string
         && request.resource.data.content is string
@@ -23,11 +19,11 @@ service cloud.firestore {
       allow read: if signedIn()
         && (
           resource.data.senderUid == request.auth.uid
-          || resource.data.recipientEmail == normalizedEmail()
+          || resource.data.recipientEmail == request.auth.token.email
         );
 
       allow update: if signedIn()
-        && resource.data.recipientEmail == normalizedEmail()
+        && resource.data.recipientEmail == request.auth.token.email
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['status', 'acceptedAt'])
         && request.resource.data.status in ['accepted', 'declined'];
