@@ -23,6 +23,14 @@ describe('Layout', () => {
     expect(screen.getByRole('region', { name: '프리뷰' })).toBeInTheDocument();
   });
 
+  it('renders the sidebar as a full-height column beside the editor shell', () => {
+    const { container } = render(<Layout />);
+    expect(container.firstElementChild).toHaveClass('flex-row');
+    const sidebar = screen.getByRole('navigation', { name: '문서 목록' });
+    expect(sidebar).toHaveClass('md:h-full');
+    expect(sidebar).toHaveClass('md:w-56');
+  });
+
   it('hides preview in edit-only mode', () => {
     useUIStore.setState({ viewMode: 'edit' });
     render(<Layout />);
