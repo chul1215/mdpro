@@ -257,6 +257,8 @@ export function Sidebar() {
                     보안
                   </button>
                 </div>
+              </div>
+              <nav aria-label="폴더와 문서 목록" className="flex-1 overflow-y-auto px-2 pb-3">
                 <div className="flex flex-col gap-1 border-t border-apple-border pt-2 dark:border-white/10">
                   <button
                     type="button"
@@ -308,8 +310,7 @@ export function Sidebar() {
                     );
                   })}
                 </div>
-              </div>
-              <nav className="flex-1 overflow-y-auto px-2 pb-3">
+                <div className="mt-2 border-t border-apple-border pt-2 dark:border-white/10">
                 {visibleDocuments.length === 0 ? (
                   <p className="px-2 py-4 text-center text-[12px] text-apple-ink/70 dark:text-white/70">
                     아직 문서가 없습니다
@@ -392,6 +393,7 @@ export function Sidebar() {
                     })}
                   </ul>
                 )}
+                </div>
               </nav>
             </div>
           ) : null}

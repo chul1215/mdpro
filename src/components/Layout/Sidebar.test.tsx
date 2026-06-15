@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -156,6 +156,22 @@ describe('Sidebar', () => {
 
     expect(screen.getByRole('button', { name: 'Alpha' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Beta' })).not.toBeInTheDocument();
+  });
+
+  it('keeps folders and documents in one full-height sidebar list', () => {
+    const now = Date.now();
+    setFolders([{ id: 'folder-a', name: '업무', locked: false }]);
+    setDocs([{ id: 'a', title: '새 문서', updatedAt: now, folderId: null }], 'a');
+
+    render(<Sidebar />);
+
+    const fullHeightList = screen.getByRole('navigation', { name: '폴더와 문서 목록' });
+    const listQueries = within(fullHeightList);
+    expect(fullHeightList).toHaveClass('flex-1');
+    expect(fullHeightList).toHaveClass('overflow-y-auto');
+    expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '전체 문서' }));
+    expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '업무' }));
+    expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '새 문서' }));
   });
 
   it('prompts for a passcode before opening a locked folder', async () => {
