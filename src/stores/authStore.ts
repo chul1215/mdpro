@@ -6,6 +6,7 @@ import {
   type AppUser,
 } from '../lib/auth/authService';
 import { useDocumentStore } from './documentStore';
+import { useFolderStore } from './folderStore';
 
 type AuthState = {
   user: AppUser | null;
@@ -26,6 +27,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       return subscribeToAuthState((user) => {
         set({ user, loading: false, error: null });
+        void useFolderStore.getState().syncUser(user);
         void useDocumentStore.getState().syncUser(user);
       });
     } catch (error) {
@@ -55,6 +57,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       await signOutOfGoogle();
       set({ user: null });
+      await useFolderStore.getState().syncUser(null);
       await useDocumentStore.getState().syncUser(null);
     } catch (error) {
       set({ error: error instanceof Error ? error.message : '로그아웃에 실패했습니다.' });
