@@ -64,7 +64,7 @@ export const useFolderStore = create<FolderState>()(
         };
         set((state) => ({
           folders: [...state.folders, folder],
-          selectedFolderId: id,
+          selectedFolderId: locked ? state.selectedFolderId : id,
           unlockedFolderIds: locked
             ? state.unlockedFolderIds
             : [...new Set([...state.unlockedFolderIds, id])],

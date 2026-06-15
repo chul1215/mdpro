@@ -25,12 +25,14 @@ describe('folderStore', () => {
   });
 
   it('creates a locked folder and unlocks it only with the correct passcode', async () => {
+    useFolderStore.getState().setSelectedFolder(null);
     const id = await useFolderStore
       .getState()
       .createFolder({ name: '비공개', passcode: '1234' });
 
     let state = useFolderStore.getState();
     expect(state.folders[0]).toMatchObject({ id, name: '비공개', locked: true });
+    expect(state.selectedFolderId).toBeNull();
     expect(state.unlockedFolderIds).not.toContain(id);
 
     await expect(useFolderStore.getState().unlockFolder(id, '0000')).resolves.toBe(false);
@@ -51,7 +53,7 @@ describe('folderStore', () => {
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw!);
     expect(parsed.state.folders).toHaveLength(1);
-    expect(parsed.state.selectedFolderId).toBe(id);
+    expect(parsed.state.selectedFolderId).toBeNull();
     expect(parsed.state.unlockedFolderIds).toBeUndefined();
   });
 });
