@@ -234,8 +234,13 @@ export function Sidebar() {
           ))}
         </div>
 
-        {/* 탭 패널 */}
-        <div role="tabpanel" id="documents-panel" className="flex-1 overflow-hidden">
+        {/* 탭 패널 — 활성 패널만 flex-1로 남은 세로 공간을 차지하고, 비활성 패널은
+            display:none(hidden)으로 flex 분배에서 제외해 활성 패널 높이를 보존한다. */}
+        <div
+          role="tabpanel"
+          id="documents-panel"
+          className={sidebarTab === 'documents' ? 'flex-1 overflow-hidden' : 'hidden'}
+        >
           {sidebarTab === 'documents' ? (
             <div className="flex flex-col h-full">
               <div className="flex flex-col gap-2 px-3 py-3">
@@ -408,15 +413,27 @@ export function Sidebar() {
           ) : null}
         </div>
 
-        <div role="tabpanel" id="outline-panel" className="flex-1 overflow-hidden">
+        <div
+          role="tabpanel"
+          id="outline-panel"
+          className={sidebarTab === 'outline' ? 'flex-1 overflow-hidden' : 'hidden'}
+        >
           {sidebarTab === 'outline' && <OutlinePanel />}
         </div>
 
-        <div role="tabpanel" id="inbox-panel" className="flex-1 overflow-hidden">
+        <div
+          role="tabpanel"
+          id="inbox-panel"
+          className={sidebarTab === 'inbox' ? 'flex-1 overflow-hidden' : 'hidden'}
+        >
           {sidebarTab === 'inbox' && <InboxPanel user={user} />}
         </div>
 
-        <div role="tabpanel" id="addressBook-panel" className="flex-1 overflow-hidden">
+        <div
+          role="tabpanel"
+          id="addressBook-panel"
+          className={sidebarTab === 'addressBook' ? 'flex-1 overflow-hidden' : 'hidden'}
+        >
           {sidebarTab === 'addressBook' && <AddressBookPanel />}
         </div>
 

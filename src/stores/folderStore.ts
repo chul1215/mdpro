@@ -73,7 +73,11 @@ export const useFolderStore = create<FolderState>()(
 
         const localFolders = get().folders;
         const existingCloudFolders = await listCloudFolders(user);
-        const foldersToUpload = existingCloudFolders.length > 0 ? [] : localFolders;
+        // 클라우드에 폴더가 이미 있어도 로컬 폴더를 병합해 업로드한다. 동일 id는
+        // 클라우드 우선(재업로드 안 함), 클라우드에 없는 로컬 폴더만 업로드해
+        // 로컬 잠금 폴더 메타데이터 손실 + document.folderId 고아화를 막는다.
+        const cloudIds = new Set(existingCloudFolders.map((folder) => folder.id));
+        const foldersToUpload = localFolders.filter((folder) => !cloudIds.has(folder.id));
         await Promise.all(foldersToUpload.map((folder) => upsertCloudFolder(user, folder)));
         if (localFolders.length > 0) localStorage.removeItem('mdpro-folders');
         const cloudFolders = await listCloudFolders(user);
@@ -163,3 +167,14 @@ export const useFolderStore = create<FolderState>()(
     },
   ),
 );
+
+// documentStore 등 외부 모듈이 React 훅 없이 폴더 잠금 상태를 조회하기 위한 공유 helper.
+// 폴더가 없거나(전체 문서) 알 수 없으면 접근 가능으로 본다. 잠긴 폴더는 해제된
+// 경우에만 접근 가능 → 잠금 문서가 에디터/뷰어에 노출되는 것을 막는 단일 진실 공급원.
+export function isFolderAccessible(folderId: string | null | undefined): boolean {
+  if (!folderId) return true;
+  const { folders, unlockedFolderIds } = useFolderStore.getState();
+  const folder = folders.find((item) => item.id === folderId);
+  if (!folder) return true;
+  return !folder.locked || unlockedFolderIds.includes(folderId);
+}

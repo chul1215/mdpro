@@ -27,8 +27,10 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       return subscribeToAuthState((user) => {
         set({ user, loading: false, error: null });
-        void useFolderStore.getState().syncUser(user);
-        void useDocumentStore.getState().syncUser(user);
+        void (async () => {
+          await useFolderStore.getState().syncUser(user);
+          await useDocumentStore.getState().syncUser(user);
+        })();
       });
     } catch (error) {
       set({

@@ -158,6 +158,28 @@ describe('Sidebar', () => {
     expect(screen.queryByRole('button', { name: 'Beta' })).not.toBeInTheDocument();
   });
 
+  it('only gives flex height to the active tab panel and hides the inactive ones', () => {
+    const now = Date.now();
+    setDocs([{ id: 'a', title: '새 문서', updatedAt: now, folderId: null }], 'a');
+
+    const { container } = render(<Sidebar />);
+
+    const documentsPanel = container.querySelector('#documents-panel');
+    const outlinePanel = container.querySelector('#outline-panel');
+    const inboxPanel = container.querySelector('#inbox-panel');
+    const addressBookPanel = container.querySelector('#addressBook-panel');
+
+    // 활성 패널(documents)만 남은 세로 공간을 차지한다.
+    expect(documentsPanel).toHaveClass('flex-1');
+    // 비활성 패널은 flex 분배에서 제외되어야 한다(공간을 차지하지 않음).
+    expect(outlinePanel).not.toHaveClass('flex-1');
+    expect(inboxPanel).not.toHaveClass('flex-1');
+    expect(addressBookPanel).not.toHaveClass('flex-1');
+    expect(outlinePanel).toHaveClass('hidden');
+    expect(inboxPanel).toHaveClass('hidden');
+    expect(addressBookPanel).toHaveClass('hidden');
+  });
+
   it('keeps folders and documents in one full-height sidebar list', () => {
     const now = Date.now();
     setFolders([{ id: 'folder-a', name: '업무', locked: false }]);

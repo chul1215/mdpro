@@ -41,6 +41,7 @@ import {
   createDocument as idbCreateDocument,
   listDocuments,
 } from '../lib/storage/documents';
+import * as documentsModule from '../lib/storage/documents';
 
 const user = { uid: 'user-1', email: 'user@example.com', displayName: null, photoURL: null };
 
@@ -116,5 +117,79 @@ describe('documentStore cloud sync', () => {
     expect(state.documents.find((doc) => doc.id === 'cloud-1')).toBeUndefined();
     expect(state.documents).toHaveLength(1);
     expect(state.title).toBe('제목 없음');
+  });
+
+  it('moveDocument for the active doc upserts to the cloud (no IndexedDB fallback) when no cloud record exists yet', async () => {
+    const idbSpy = vi.spyOn(documentsModule, 'updateDocument');
+    useDocumentStore.setState({
+      cloudUser: user,
+      activeId: 'active-doc',
+      title: '활성 문서',
+      content: '# 활성 문서\n\n본문',
+      titleManual: false,
+      documents: [{ id: 'active-doc', title: '활성 문서', folderId: null, updatedAt: 1 }],
+    });
+    // getCloudDocument는 cloudRecords에 'active-doc'이 없으므로 undefined를 반환한다.
+
+    await useDocumentStore.getState().moveDocument('active-doc', 'folder-x');
+
+    // 로컬 IDB로 무음 fallback하지 않아야 한다.
+    expect(idbSpy).not.toHaveBeenCalled();
+    // 활성 문서이므로 현재 content/title로 cloud upsert하며 folderId 반영.
+    expect(mocks.upsertCloudDocument).toHaveBeenCalledWith(
+      user,
+      expect.objectContaining({ id: 'active-doc', content: '# 활성 문서\n\n본문', folderId: 'folder-x' }),
+    );
+    expect(useDocumentStore.getState().documents[0]).toMatchObject({
+      id: 'active-doc',
+      folderId: 'folder-x',
+    });
+    idbSpy.mockRestore();
+  });
+
+  it('moveDocument does not fall back to IndexedDB for a non-active doc missing in the cloud', async () => {
+    const idbSpy = vi.spyOn(documentsModule, 'updateDocument');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    useDocumentStore.setState({
+      cloudUser: user,
+      activeId: 'other-doc',
+      documents: [{ id: 'ghost', title: '유령', folderId: null, updatedAt: 1 }],
+    });
+
+    await useDocumentStore.getState().moveDocument('ghost', 'folder-x');
+
+    expect(idbSpy).not.toHaveBeenCalled();
+    expect(mocks.upsertCloudDocument).not.toHaveBeenCalled();
+    expect(useDocumentStore.getState().documents.find((d) => d.id === 'ghost')).toMatchObject({
+      folderId: null,
+    });
+    idbSpy.mockRestore();
+    warnSpy.mockRestore();
+  });
+
+  it('moveDocument keeps using the existing cloud record when present', async () => {
+    mocks.cloudRecords.set('cloud-2', {
+      id: 'cloud-2',
+      title: '클라우드 문서',
+      content: '# 클라우드 문서',
+      folderId: null,
+      createdAt: 1,
+      updatedAt: 2,
+    });
+    const idbSpy = vi.spyOn(documentsModule, 'updateDocument');
+    useDocumentStore.setState({
+      cloudUser: user,
+      activeId: 'cloud-2',
+      documents: [{ id: 'cloud-2', title: '클라우드 문서', folderId: null, updatedAt: 2 }],
+    });
+
+    await useDocumentStore.getState().moveDocument('cloud-2', 'folder-y');
+
+    expect(idbSpy).not.toHaveBeenCalled();
+    expect(mocks.upsertCloudDocument).toHaveBeenCalledWith(
+      user,
+      expect.objectContaining({ id: 'cloud-2', content: '# 클라우드 문서', folderId: 'folder-y' }),
+    );
+    idbSpy.mockRestore();
   });
 });

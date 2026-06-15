@@ -1,8 +1,10 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDocumentStore } from './documentStore';
+import { useFolderStore } from './folderStore';
 import {
   __resetForTests,
+  createDocument as idbCreateDocument,
   getDocument,
   listDocuments,
 } from '../lib/storage/documents';
@@ -26,6 +28,13 @@ function resetStore() {
     content: '',
     titleManual: false,
     loading: false,
+    cloudUser: null,
+  });
+  useFolderStore.setState({
+    folders: [],
+    selectedFolderId: null,
+    unlockedFolderIds: [],
+    cloudUser: null,
   });
 }
 
@@ -34,6 +43,66 @@ describe('documentStore', () => {
     await resetDB();
     localStorage.clear();
     resetStore();
+  });
+
+  it('hydrate falls back to an accessible document when the persisted active id is in a locked folder', async () => {
+    useFolderStore.setState({
+      folders: [{ id: 'secret', name: '비공개', locked: true, passcodeHash: 'x', createdAt: 1 }],
+      unlockedFolderIds: [],
+    });
+    await idbCreateDocument({ title: '공개', content: '# 공개\n\n공개 본문' });
+    const secret = (await idbCreateDocument({
+      title: '비밀',
+      content: '# 비밀\n\n비밀 본문',
+      folderId: 'secret',
+    })).id;
+    // persist된 activeId가 잠긴 폴더 문서를 가리키는 상황.
+    useDocumentStore.setState({ activeId: secret });
+
+    await useDocumentStore.getState().hydrate();
+
+    const s = useDocumentStore.getState();
+    expect(s.activeId).not.toBe(secret);
+    expect(s.content).not.toContain('비밀 본문');
+  });
+
+  it('switchTo refuses to load a document inside a locked folder and keeps current content', async () => {
+    await useDocumentStore.getState().hydrate();
+    const before = useDocumentStore.getState().content;
+    useFolderStore.setState({
+      folders: [{ id: 'secret', name: '비공개', locked: true, passcodeHash: 'x', createdAt: 1 }],
+      unlockedFolderIds: [],
+    });
+    const secret = (await idbCreateDocument({
+      title: '비밀',
+      content: '# 비밀\n\n비밀 본문',
+      folderId: 'secret',
+    })).id;
+
+    await useDocumentStore.getState().switchTo(secret);
+
+    const s = useDocumentStore.getState();
+    expect(s.content).toBe(before);
+    expect(s.content).not.toContain('비밀 본문');
+    expect(s.activeId).not.toBe(secret);
+  });
+
+  it('switchTo loads a locked folder document once the folder is unlocked', async () => {
+    await useDocumentStore.getState().hydrate();
+    useFolderStore.setState({
+      folders: [{ id: 'secret', name: '비공개', locked: true, passcodeHash: 'x', createdAt: 1 }],
+      unlockedFolderIds: ['secret'],
+    });
+    const secret = (await idbCreateDocument({
+      title: '비밀',
+      content: '# 비밀\n\n비밀 본문',
+      folderId: 'secret',
+    })).id;
+
+    await useDocumentStore.getState().switchTo(secret);
+
+    expect(useDocumentStore.getState().activeId).toBe(secret);
+    expect(useDocumentStore.getState().content).toContain('비밀 본문');
   });
 
   it('hydrate on empty DB creates and activates a new document', async () => {

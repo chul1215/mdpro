@@ -62,6 +62,32 @@ describe('folderStore cloud sync', () => {
     expect(state.folders.map((folder) => folder.name)).toEqual(['업무', '비공개']);
   });
 
+  it('merges local folders into the cloud even when cloud folders already exist', async () => {
+    mocks.cloudFolders.set('cloud-folder', {
+      id: 'cloud-folder',
+      name: '클라우드',
+      locked: false,
+      createdAt: 1,
+    });
+    await useFolderStore.getState().createFolder({ name: '로컬 보안', passcode: '1234' });
+    const localId = useFolderStore.getState().folders.find((f) => f.name === '로컬 보안')!.id;
+
+    await useFolderStore.getState().syncUser(user);
+
+    // 클라우드에 이미 폴더가 있어도 로컬 폴더는 업로드되어야 한다(손실 방지).
+    expect(mocks.upsertCloudFolder).toHaveBeenCalledWith(
+      user,
+      expect.objectContaining({ id: localId, name: '로컬 보안', locked: true }),
+    );
+    // 동일 id의 클라우드 폴더는 다시 업로드하지 않는다(클라우드 우선).
+    expect(mocks.upsertCloudFolder).not.toHaveBeenCalledWith(
+      user,
+      expect.objectContaining({ id: 'cloud-folder' }),
+    );
+    const state = useFolderStore.getState();
+    expect(state.folders.map((f) => f.name).sort()).toEqual(['로컬 보안', '클라우드']);
+  });
+
   it('uses Firestore for create/delete while signed in and hides cloud folders after sign-out', async () => {
     mocks.cloudFolders.set('cloud-folder', {
       id: 'cloud-folder',

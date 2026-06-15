@@ -10,6 +10,7 @@ import {
   type DocumentSummary,
 } from '../lib/storage/documents';
 import { extractTitleFromMarkdown } from '../lib/markdown/title';
+import { isFolderAccessible } from './folderStore';
 import type { AppUser } from '../lib/auth/authService';
 import {
   deleteCloudDocument,
@@ -170,11 +171,16 @@ export const useDocumentStore = create<DocumentState>()(
             set({ loading: true });
             const list = await idbListDocuments();
             set({ documents: list });
+            // 잠긴 폴더 문서는 자동으로 열지 않는다. persisted activeId나 list[0]가
+            // 잠긴 폴더 문서이면 접근 가능한(공개/잠금해제) 문서로 fallback한다.
+            const accessible = list.filter((d) => isFolderAccessible(d.folderId));
             const persistedId = get().activeId;
-            if (persistedId && list.some((d) => d.id === persistedId)) {
+            const persistedAccessible =
+              persistedId && accessible.some((d) => d.id === persistedId);
+            if (persistedAccessible) {
               await get().switchTo(persistedId);
-            } else if (list.length > 0) {
-              await get().switchTo(list[0].id);
+            } else if (accessible.length > 0) {
+              await get().switchTo(accessible[0].id);
             } else {
               await get().createDocument();
             }
@@ -293,6 +299,11 @@ export const useDocumentStore = create<DocumentState>()(
           console.warn('[documentStore] switchTo: record not found', id);
           return;
         }
+        // 잠긴(미해제) 폴더 문서는 active content로 노출하지 않는다.
+        if (!isFolderAccessible(record.folderId)) {
+          console.warn('[documentStore] switchTo: folder is locked', id);
+          return;
+        }
         clearTimer();
         const auto = extractTitleFromMarkdown(record.content);
         set({
@@ -325,14 +336,37 @@ export const useDocumentStore = create<DocumentState>()(
       moveDocument: async (id, folderId) => {
         await flushPending();
         const cloudUser = get().cloudUser;
-        const existingCloudRecord = cloudUser ? await getCloudDocument(cloudUser, id) : undefined;
-        const updated = cloudUser && existingCloudRecord
-          ? await upsertCloudDocument(cloudUser, {
+        let updated: DocumentRecord | undefined;
+        if (cloudUser) {
+          // 로그인 중에는 로컬 IDB로 무음 fallback하지 않는다(로컬이 비어 있어 실패).
+          const existingCloudRecord = await getCloudDocument(cloudUser, id);
+          if (existingCloudRecord) {
+            updated = await upsertCloudDocument(cloudUser, {
               ...existingCloudRecord,
               folderId,
               updatedAt: Date.now(),
-            })
-          : await idbUpdateDocument(id, { folderId });
+            });
+          } else if (get().activeId === id) {
+            // 클라우드 레코드가 아직 없지만 현재 활성 문서면, 메모리상의 최신
+            // content/title로 cloud upsert하며 folderId를 반영한다.
+            const state = get();
+            const now = Date.now();
+            updated = await upsertCloudDocument(cloudUser, {
+              id,
+              title: state.title,
+              content: state.content,
+              folderId,
+              createdAt: now,
+              updatedAt: now,
+            });
+          } else {
+            // 활성 문서도 아니고 클라우드 레코드도 없으면 옮길 본문이 없다.
+            console.warn('[documentStore] moveDocument: cloud record not found', id);
+            return;
+          }
+        } else {
+          updated = await idbUpdateDocument(id, { folderId });
+        }
         if (!updated) return;
         const updatedSummary: DocumentSummary = {
           id: updated.id,

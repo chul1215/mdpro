@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const signInWithGoogle = vi.fn(async () => undefined);
 const signOutOfGoogle = vi.fn(async () => undefined);
+const syncFolders = vi.fn<(_user: unknown) => Promise<void>>(async () => undefined);
+const syncDocuments = vi.fn<(_user: unknown) => Promise<void>>(async () => undefined);
 let authCallback: ((user: unknown) => void) | null = null;
 const unsubscribe = vi.fn();
 const subscribeToAuthState = vi.fn((callback: (user: unknown) => void) => {
@@ -15,6 +17,18 @@ vi.mock('../lib/auth/authService', () => ({
   subscribeToAuthState,
 }));
 
+vi.mock('./folderStore', () => ({
+  useFolderStore: {
+    getState: () => ({ syncUser: syncFolders }),
+  },
+}));
+
+vi.mock('./documentStore', () => ({
+  useDocumentStore: {
+    getState: () => ({ syncUser: syncDocuments }),
+  },
+}));
+
 describe('authStore', () => {
   beforeEach(async () => {
     vi.resetModules();
@@ -22,6 +36,8 @@ describe('authStore', () => {
     signOutOfGoogle.mockClear();
     subscribeToAuthState.mockClear();
     unsubscribe.mockClear();
+    syncFolders.mockClear();
+    syncDocuments.mockClear();
     authCallback = null;
   });
 
@@ -35,6 +51,29 @@ describe('authStore', () => {
     expect(useAuthStore.getState().user?.email).toBe('user@example.com');
     cleanup();
     expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('syncs folders before documents when auth state changes', async () => {
+    let resolveFolders!: () => void;
+    syncFolders.mockReturnValueOnce(new Promise<void>((resolve) => {
+      resolveFolders = resolve;
+    }));
+    const { useAuthStore } = await import('./authStore');
+    const user = { uid: 'uid-1', email: 'user@example.com', displayName: '사용자', photoURL: null };
+
+    const cleanup = useAuthStore.getState().start();
+    authCallback?.(user);
+    await Promise.resolve();
+
+    expect(syncFolders).toHaveBeenCalledWith(user);
+    expect(syncDocuments).not.toHaveBeenCalled();
+
+    resolveFolders();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(syncDocuments).toHaveBeenCalledWith(user);
+    cleanup();
   });
 
   it('delegates sign-in and sign-out actions to auth service', async () => {
