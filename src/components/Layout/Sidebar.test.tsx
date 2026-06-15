@@ -208,7 +208,7 @@ describe('Sidebar', () => {
     expect(switchTo).toHaveBeenCalledWith('b');
   });
 
-  it('moves a document to a different folder from the compact document row', async () => {
+  it('moves a document to a different folder from the compact document row without covering the title', async () => {
     const now = Date.now();
     setFolders([{ id: 'folder-a', name: '업무', locked: false }]);
     setDocs([{ id: 'a', title: 'Alpha', updatedAt: now }], 'a');
@@ -217,10 +217,16 @@ describe('Sidebar', () => {
     render(<Sidebar />);
     const row = screen.getByTestId('document-row-a');
     expect(row).toHaveClass('h-9');
+    const documentButton = screen.getByRole('button', { name: 'Alpha' });
+    expect(documentButton).toHaveClass('pr-14');
+    expect(documentButton).not.toHaveClass('pr-24');
     const folderSelect = screen.getByLabelText('Alpha 폴더 이동');
     expect(folderSelect).toHaveClass('absolute');
+    expect(folderSelect).toHaveClass('w-7');
+    expect(folderSelect).toHaveClass('text-transparent');
     expect(folderSelect).not.toHaveClass('mt-1');
     expect(folderSelect).not.toHaveClass('w-full');
+    expect(folderSelect).not.toHaveClass('w-16');
 
     await user.selectOptions(folderSelect, 'folder-a');
 

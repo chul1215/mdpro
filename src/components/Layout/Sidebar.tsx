@@ -320,8 +320,8 @@ export function Sidebar() {
                       const active = doc.id === activeId;
                       const displayTitle = doc.title.trim() || '제목 없음';
                       const itemClass = active
-                        ? 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-24 text-left text-[13px] bg-blue-500 text-white'
-                        : 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-24 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
+                        ? 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-14 text-left text-[13px] bg-blue-500 text-white'
+                        : 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-14 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
                       return (
                         <li key={doc.id}>
                           <div className="group relative h-9" data-testid={`document-row-${doc.id}`}>
@@ -361,15 +361,15 @@ export function Sidebar() {
                                 void moveDocument(doc.id, event.target.value || null);
                               }}
                               className={
-                                'absolute right-7 top-1/2 h-7 w-16 -translate-y-1/2 rounded-md border px-1 text-[10px] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
+                                'absolute right-7 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md border px-0 text-[10px] text-transparent transition-opacity focus:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus:text-white ' +
                                 (active
-                                  ? 'border-white/40 bg-white/15 text-white opacity-100'
-                                  : 'border-apple-border bg-white text-apple-ink opacity-70 hover:opacity-100 dark:border-white/10 dark:bg-surface-4 dark:text-white md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100')
+                                  ? 'border-white/40 bg-white/15 opacity-90'
+                                  : 'border-apple-border bg-white opacity-70 hover:opacity-100 dark:border-white/10 dark:bg-surface-4 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100')
                               }
                             >
-                              <option value="">전체 문서</option>
+                              <option className="text-apple-ink" value="">전체 문서</option>
                               {folders.map((folder) => (
-                                <option key={folder.id} value={folder.id}>
+                                <option className="text-apple-ink" key={folder.id} value={folder.id}>
                                   {folder.locked ? '🔒 ' : ''}{folder.name}
                                 </option>
                               ))}
