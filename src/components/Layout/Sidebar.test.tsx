@@ -208,14 +208,21 @@ describe('Sidebar', () => {
     expect(switchTo).toHaveBeenCalledWith('b');
   });
 
-  it('moves a document to a different folder from the document row', async () => {
+  it('moves a document to a different folder from the compact document row', async () => {
     const now = Date.now();
     setFolders([{ id: 'folder-a', name: '업무', locked: false }]);
     setDocs([{ id: 'a', title: 'Alpha', updatedAt: now }], 'a');
     const user = userEvent.setup();
 
     render(<Sidebar />);
-    await user.selectOptions(screen.getByLabelText('Alpha 폴더 이동'), 'folder-a');
+    const row = screen.getByTestId('document-row-a');
+    expect(row).toHaveClass('h-9');
+    const folderSelect = screen.getByLabelText('Alpha 폴더 이동');
+    expect(folderSelect).toHaveClass('absolute');
+    expect(folderSelect).not.toHaveClass('mt-1');
+    expect(folderSelect).not.toHaveClass('w-full');
+
+    await user.selectOptions(folderSelect, 'folder-a');
 
     expect(moveDocument).toHaveBeenCalledWith('a', 'folder-a');
   });

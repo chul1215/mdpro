@@ -320,11 +320,11 @@ export function Sidebar() {
                       const active = doc.id === activeId;
                       const displayTitle = doc.title.trim() || '제목 없음';
                       const itemClass = active
-                        ? 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 pr-8 text-left text-[13px] bg-blue-500 text-white'
-                        : 'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 pr-8 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
+                        ? 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-24 text-left text-[13px] bg-blue-500 text-white'
+                        : 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-24 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
                       return (
                         <li key={doc.id}>
-                          <div className="group relative">
+                          <div className="group relative h-9" data-testid={`document-row-${doc.id}`}>
                             <button
                               type="button"
                               aria-label={displayTitle}
@@ -360,7 +360,12 @@ export function Sidebar() {
                               onChange={(event) => {
                                 void moveDocument(doc.id, event.target.value || null);
                               }}
-                              className="mt-1 w-full rounded-md border border-apple-border bg-white px-2 py-1 text-[11px] text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:bg-surface-4 dark:text-white"
+                              className={
+                                'absolute right-7 top-1/2 h-7 w-16 -translate-y-1/2 rounded-md border px-1 text-[10px] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
+                                (active
+                                  ? 'border-white/40 bg-white/15 text-white opacity-100'
+                                  : 'border-apple-border bg-white text-apple-ink opacity-70 hover:opacity-100 dark:border-white/10 dark:bg-surface-4 dark:text-white md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100')
+                              }
                             >
                               <option value="">전체 문서</option>
                               {folders.map((folder) => (
