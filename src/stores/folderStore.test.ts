@@ -56,4 +56,30 @@ describe('folderStore', () => {
     expect(parsed.state.selectedFolderId).toBeNull();
     expect(parsed.state.unlockedFolderIds).toBeUndefined();
   });
+
+  it('deletes a normal folder and clears the selected folder', async () => {
+    const id = await useFolderStore.getState().createFolder({ name: '업무' });
+
+    useFolderStore.getState().deleteFolder(id);
+
+    const state = useFolderStore.getState();
+    expect(state.folders).toHaveLength(0);
+    expect(state.selectedFolderId).toBeNull();
+    expect(state.unlockedFolderIds).not.toContain(id);
+  });
+
+  it('deletes a locked folder and removes its transient unlock state', async () => {
+    const id = await useFolderStore
+      .getState()
+      .createFolder({ name: '비공개', passcode: '1234' });
+    await useFolderStore.getState().unlockFolder(id, '1234');
+    useFolderStore.getState().setSelectedFolder(id);
+
+    useFolderStore.getState().deleteFolder(id);
+
+    const state = useFolderStore.getState();
+    expect(state.folders).toHaveLength(0);
+    expect(state.selectedFolderId).toBeNull();
+    expect(state.unlockedFolderIds).not.toContain(id);
+  });
 });

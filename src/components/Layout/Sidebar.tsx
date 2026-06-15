@@ -10,6 +10,7 @@ import { AddressBookPanel } from '../Sharing/AddressBookPanel';
 import { useAuthStore } from '../../stores/authStore';
 
 type DeleteTarget = { id: string; title: string };
+type FolderDeleteTarget = { id: string; name: string; locked: boolean };
 
 const TABS: Array<{
   value: SidebarTab;
@@ -62,12 +63,14 @@ export function Sidebar() {
   const folders = useFolderStore((s) => s.folders);
   const selectedFolderId = useFolderStore((s) => s.selectedFolderId);
   const createFolder = useFolderStore((s) => s.createFolder);
+  const deleteFolder = useFolderStore((s) => s.deleteFolder);
   const setSelectedFolder = useFolderStore((s) => s.setSelectedFolder);
   const unlockFolder = useFolderStore((s) => s.unlockFolder);
   const isFolderUnlocked = useFolderStore((s) => s.isFolderUnlocked);
   const user = useAuthStore((s) => s.user);
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [folderDeleteTarget, setFolderDeleteTarget] = useState<FolderDeleteTarget | null>(null);
 
   const handleCreate = useCallback(async () => {
     const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
@@ -113,6 +116,34 @@ export function Sidebar() {
     },
     [folders, isFolderUnlocked, setSelectedFolder, unlockFolder],
   );
+
+  const handleRequestDeleteFolder = useCallback(
+    async (folder: FolderDeleteTarget) => {
+      if (folder.locked && !isFolderUnlocked(folder.id)) {
+        const passcode = window.prompt('폴더 삭제를 위해 암호코드를 입력하세요.');
+        if (!passcode) return;
+        const ok = await unlockFolder(folder.id, passcode);
+        if (!ok) {
+          window.alert('암호코드가 올바르지 않습니다.');
+          return;
+        }
+      }
+      setFolderDeleteTarget(folder);
+    },
+    [isFolderUnlocked, unlockFolder],
+  );
+
+  const handleConfirmFolderDelete = useCallback(async () => {
+    if (!folderDeleteTarget) return;
+    const id = folderDeleteTarget.id;
+    setFolderDeleteTarget(null);
+    await Promise.all(
+      documents
+        .filter((doc) => doc.folderId === id)
+        .map((doc) => moveDocument(doc.id, null)),
+    );
+    deleteFolder(id);
+  }, [deleteFolder, documents, folderDeleteTarget, moveDocument]);
 
   const handleSelect = useCallback(
     async (id: string) => {
@@ -243,21 +274,37 @@ export function Sidebar() {
                   {folders.map((folder) => {
                     const locked = folder.locked && !isFolderUnlocked(folder.id);
                     return (
-                      <button
-                        key={folder.id}
-                        type="button"
-                        onClick={() => handleSelectFolder(folder.id)}
-                        aria-label={locked ? `${folder.name} 잠김` : folder.name}
-                        aria-current={selectedFolderId === folder.id ? 'true' : undefined}
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] ${
-                          selectedFolderId === folder.id
-                            ? 'bg-blue-500 text-white'
-                            : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5'
-                        }`}
-                      >
-                        {locked ? <Lock className="h-3.5 w-3.5" aria-hidden="true" /> : <Folder className="h-3.5 w-3.5" aria-hidden="true" />}
-                        <span className="truncate">{folder.name}</span>
-                      </button>
+                      <div key={folder.id} className="group flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectFolder(folder.id)}
+                          aria-label={locked ? `${folder.name} 잠김` : folder.name}
+                          aria-current={selectedFolderId === folder.id ? 'true' : undefined}
+                          className={`inline-flex min-w-0 flex-1 items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] ${
+                            selectedFolderId === folder.id
+                              ? 'bg-blue-500 text-white'
+                              : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5'
+                          }`}
+                        >
+                          {locked ? <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Folder className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                          <span className="truncate">{folder.name}</span>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`${folder.name}${locked ? ' 잠김' : ''} 폴더 삭제`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleRequestDeleteFolder({
+                              id: folder.id,
+                              name: folder.name,
+                              locked: folder.locked,
+                            });
+                          }}
+                          className="rounded-md p-1 text-apple-ink/50 opacity-80 transition-colors hover:bg-black/10 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-red-400 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -356,6 +403,20 @@ export function Sidebar() {
         <div role="tabpanel" id="addressBook-panel" className="flex-1 overflow-hidden">
           {sidebarTab === 'addressBook' && <AddressBookPanel />}
         </div>
+
+        <ConfirmDialog
+          open={folderDeleteTarget !== null}
+          title="폴더 삭제"
+          message={
+            folderDeleteTarget
+              ? `"${folderDeleteTarget.name}" 폴더를 삭제하시겠습니까? 폴더 안의 문서는 삭제하지 않고 전체 문서로 이동합니다.`
+              : ''
+          }
+          confirmLabel="삭제"
+          destructive
+          onConfirm={handleConfirmFolderDelete}
+          onCancel={() => setFolderDeleteTarget(null)}
+        />
 
         <ConfirmDialog
           open={deleteTarget !== null}

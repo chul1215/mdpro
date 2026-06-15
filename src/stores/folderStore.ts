@@ -20,6 +20,7 @@ type FolderState = {
   unlockedFolderIds: string[];
 
   createFolder: (input: CreateFolderInput) => Promise<string>;
+  deleteFolder: (id: string) => void;
   setSelectedFolder: (id: string | null) => void;
   unlockFolder: (id: string, passcode: string) => Promise<boolean>;
   lockFolder: (id: string) => void;
@@ -71,6 +72,13 @@ export const useFolderStore = create<FolderState>()(
         }));
         return id;
       },
+
+      deleteFolder: (id) =>
+        set((state) => ({
+          folders: state.folders.filter((folder) => folder.id !== id),
+          selectedFolderId: state.selectedFolderId === id ? null : state.selectedFolderId,
+          unlockedFolderIds: state.unlockedFolderIds.filter((folderId) => folderId !== id),
+        })),
 
       setSelectedFolder: (id) => set({ selectedFolderId: id }),
 

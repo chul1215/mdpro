@@ -7,6 +7,14 @@ const switchTo = vi.fn(async () => {});
 const removeDocument = vi.fn(async () => {});
 const moveDocument = vi.fn(async () => {});
 const createFolder = vi.fn(async () => 'folder-new');
+const deleteFolder = vi.fn((id: string) => {
+  mockFolderState = {
+    ...mockFolderState,
+    folders: mockFolderState.folders.filter((folder) => folder.id !== id),
+    selectedFolderId: mockFolderState.selectedFolderId === id ? null : mockFolderState.selectedFolderId,
+    unlockedFolderIds: mockFolderState.unlockedFolderIds.filter((folderId) => folderId !== id),
+  };
+});
 const setSelectedFolder = vi.fn((id: string | null) => {
   mockFolderState = { ...mockFolderState, selectedFolderId: id };
 });
@@ -26,6 +34,7 @@ type MockFolderState = {
   selectedFolderId: string | null;
   unlockedFolderIds: string[];
   createFolder: typeof createFolder;
+  deleteFolder: typeof deleteFolder;
   setSelectedFolder: typeof setSelectedFolder;
   unlockFolder: typeof unlockFolder;
   isFolderUnlocked: (id: string) => boolean;
@@ -45,6 +54,7 @@ let mockFolderState: MockFolderState = {
   selectedFolderId: null,
   unlockedFolderIds: [],
   createFolder,
+  deleteFolder,
   setSelectedFolder,
   unlockFolder,
   isFolderUnlocked: (id) => mockFolderState.unlockedFolderIds.includes(id),
@@ -82,6 +92,7 @@ function setFolders(
     selectedFolderId,
     unlockedFolderIds,
     createFolder,
+    deleteFolder,
     setSelectedFolder,
     unlockFolder,
     isFolderUnlocked: (id) => mockFolderState.unlockedFolderIds.includes(id),
@@ -97,6 +108,7 @@ describe('Sidebar', () => {
     removeDocument.mockClear();
     moveDocument.mockClear();
     createFolder.mockClear();
+    deleteFolder.mockClear();
     setSelectedFolder.mockClear();
     unlockFolder.mockClear();
     vi.restoreAllMocks();
@@ -206,6 +218,38 @@ describe('Sidebar', () => {
     await user.selectOptions(screen.getByLabelText('Alpha 폴더 이동'), 'folder-a');
 
     expect(moveDocument).toHaveBeenCalledWith('a', 'folder-a');
+  });
+
+  it('opens confirm dialog and deletes a folder while moving its documents to all documents', async () => {
+    const now = Date.now();
+    setFolders([{ id: 'folder-a', name: '업무', locked: false }], 'folder-a', ['folder-a']);
+    setDocs([
+      { id: 'a', title: 'Alpha', updatedAt: now, folderId: 'folder-a' },
+      { id: 'b', title: 'Beta', updatedAt: now, folderId: null },
+    ]);
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '업무 폴더 삭제' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '삭제' }));
+
+    expect(moveDocument).toHaveBeenCalledWith('a', null);
+    expect(moveDocument).not.toHaveBeenCalledWith('b', null);
+    expect(deleteFolder).toHaveBeenCalledWith('folder-a');
+  });
+
+  it('requires the passcode before deleting a locked folder', async () => {
+    setFolders([{ id: 'secret', name: '비공개', locked: true }]);
+    vi.spyOn(window, 'prompt').mockReturnValue('1234');
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '비공개 잠김 폴더 삭제' }));
+
+    expect(unlockFolder).toHaveBeenCalledWith('secret', '1234');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('opens confirm dialog and calls removeDocument on confirm', async () => {
