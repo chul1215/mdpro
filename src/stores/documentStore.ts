@@ -6,9 +6,17 @@ import {
   getDocument as idbGetDocument,
   listDocuments as idbListDocuments,
   updateDocument as idbUpdateDocument,
+  type DocumentRecord,
   type DocumentSummary,
 } from '../lib/storage/documents';
 import { extractTitleFromMarkdown } from '../lib/markdown/title';
+import type { AppUser } from '../lib/auth/authService';
+import {
+  deleteCloudDocument,
+  getCloudDocument,
+  listCloudDocuments,
+  upsertCloudDocument,
+} from '../lib/sync/documentSyncService';
 
 type DocumentState = {
   activeId: string | null;
@@ -17,8 +25,10 @@ type DocumentState = {
   content: string;
   titleManual: boolean;
   loading: boolean;
+  cloudUser: AppUser | null;
 
   hydrate: () => Promise<void>;
+  syncUser: (user: AppUser | null) => Promise<void>;
   createDocument: (init?: { title?: string; content?: string; folderId?: string | null }) => Promise<string>;
   switchTo: (id: string) => Promise<void>;
   removeDocument: (id: string) => Promise<void>;
@@ -99,6 +109,43 @@ function cancelPendingIf(id: string) {
   if (pendingId === id) clearTimer();
 }
 
+function makeDocumentSummary(record: DocumentRecord): DocumentSummary {
+  return {
+    id: record.id,
+    title: record.title,
+    folderId: record.folderId,
+    updatedAt: record.updatedAt,
+  };
+}
+
+async function listLocalDocumentRecords(): Promise<DocumentRecord[]> {
+  const summaries = await idbListDocuments();
+  const records = await Promise.all(summaries.map((item) => idbGetDocument(item.id)));
+  return records.filter((record): record is DocumentRecord => Boolean(record));
+}
+
+async function clearLocalDocumentRecords(): Promise<void> {
+  const records = await listLocalDocumentRecords();
+  await Promise.all(records.map((record) => idbDeleteDocument(record.id)));
+}
+
+function isBlankDefaultDocument(record: DocumentRecord): boolean {
+  return record.title === '제목 없음' && record.content === '# 제목 없음\n\n';
+}
+
+function makeNewRecord(init?: { title?: string; content?: string; folderId?: string | null }): DocumentRecord {
+  const now = Date.now();
+  const content = init?.content ?? '# 제목 없음\n\n';
+  return {
+    id: crypto.randomUUID(),
+    title: init?.title ?? (init?.content !== undefined ? extractTitleFromMarkdown(content) : '제목 없음'),
+    content,
+    folderId: init?.folderId ?? null,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export const useDocumentStore = create<DocumentState>()(
   persist(
     (set, get) => ({
@@ -108,6 +155,7 @@ export const useDocumentStore = create<DocumentState>()(
       content: '',
       titleManual: false,
       loading: false,
+      cloudUser: null,
 
       hydrate: async () => {
         // 이미 진행 중인 hydrate가 있으면 그 Promise를 공유한다(in-flight 공유).
@@ -140,8 +188,68 @@ export const useDocumentStore = create<DocumentState>()(
         return task;
       },
 
+      syncUser: async (user) => {
+        await flushPending();
+        clearTimer();
+        if (!user) {
+          set({
+            cloudUser: null,
+            activeId: null,
+            documents: [],
+            title: '',
+            content: '',
+            titleManual: false,
+            loading: false,
+          });
+          await get().hydrate();
+          return;
+        }
+
+        set({ loading: true, cloudUser: user });
+        try {
+          const localRecords = await listLocalDocumentRecords();
+          const existingCloudList = await listCloudDocuments(user);
+          const recordsToUpload = existingCloudList.length > 0
+            ? localRecords.filter((record) => !isBlankDefaultDocument(record))
+            : localRecords;
+          await Promise.all(recordsToUpload.map((record) => upsertCloudDocument(user, record)));
+          if (localRecords.length > 0) await clearLocalDocumentRecords();
+
+          let cloudList = await listCloudDocuments(user);
+          if (cloudList.length === 0) {
+            await get().createDocument();
+            cloudList = await listCloudDocuments(user);
+          } else {
+            set({ documents: cloudList });
+            const preferredId = get().activeId;
+            const nextId = preferredId && cloudList.some((doc) => doc.id === preferredId)
+              ? preferredId
+              : cloudList[0].id;
+            await get().switchTo(nextId);
+          }
+        } finally {
+          set({ loading: false });
+        }
+      },
+
       createDocument: async (init) => {
         await flushPending();
+        const cloudUser = get().cloudUser;
+        if (cloudUser) {
+          const record = makeNewRecord(init);
+          await upsertCloudDocument(cloudUser, record);
+          const summary = makeDocumentSummary(record);
+          clearTimer();
+          const auto = extractTitleFromMarkdown(record.content);
+          set((s) => ({
+            activeId: record.id,
+            title: record.title,
+            content: record.content,
+            titleManual: record.title !== auto,
+            documents: [summary, ...s.documents.filter((d) => d.id !== record.id)],
+          }));
+          return record.id;
+        }
         // title 미지정 + content 제공 시 H1에서 자동 추출해 idb 어댑터에 전달하면
         // 저장 레코드 / 목록 요약이 일관된 제목을 갖는다.
         const resolvedInit = {
@@ -176,7 +284,10 @@ export const useDocumentStore = create<DocumentState>()(
 
       switchTo: async (id) => {
         await flushPending();
-        const record = await idbGetDocument(id);
+        const cloudUser = get().cloudUser;
+        const record = cloudUser
+          ? await getCloudDocument(cloudUser, id)
+          : await idbGetDocument(id);
         if (!record) {
           // 조용히 무시. 상위 UI가 목록을 다시 로드하도록 둔다.
           console.warn('[documentStore] switchTo: record not found', id);
@@ -194,7 +305,12 @@ export const useDocumentStore = create<DocumentState>()(
 
       removeDocument: async (id) => {
         cancelPendingIf(id);
-        await idbDeleteDocument(id);
+        const cloudUser = get().cloudUser;
+        if (cloudUser) {
+          await deleteCloudDocument(cloudUser, id);
+        } else {
+          await idbDeleteDocument(id);
+        }
         const remaining = get().documents.filter((d) => d.id !== id);
         set({ documents: remaining });
         if (get().activeId === id) {
@@ -208,7 +324,15 @@ export const useDocumentStore = create<DocumentState>()(
 
       moveDocument: async (id, folderId) => {
         await flushPending();
-        const updated = await idbUpdateDocument(id, { folderId });
+        const cloudUser = get().cloudUser;
+        const existingCloudRecord = cloudUser ? await getCloudDocument(cloudUser, id) : undefined;
+        const updated = cloudUser && existingCloudRecord
+          ? await upsertCloudDocument(cloudUser, {
+              ...existingCloudRecord,
+              folderId,
+              updatedAt: Date.now(),
+            })
+          : await idbUpdateDocument(id, { folderId });
         if (!updated) return;
         const updatedSummary: DocumentSummary = {
           id: updated.id,
@@ -233,6 +357,7 @@ export const useDocumentStore = create<DocumentState>()(
 
         const id = prev.activeId;
         if (!id) return;
+        const cloudUser = prev.cloudUser;
 
         // 저장 시 activeId를 클로저로 캡처해 전환 도중 반영되지 않게 한다.
         scheduleSave(id, async () => {
@@ -240,10 +365,20 @@ export const useDocumentStore = create<DocumentState>()(
           const titleToSave = latest.titleManual
             ? latest.title
             : extractTitleFromMarkdown(latest.content);
-          const updated = await idbUpdateDocument(id, {
-            title: titleToSave,
-            content: latest.content,
-          });
+          const previousRecord = cloudUser ? await getCloudDocument(cloudUser, id) : undefined;
+          const updated = cloudUser
+            ? await upsertCloudDocument(cloudUser, {
+                id,
+                title: titleToSave,
+                content: latest.content,
+                folderId: previousRecord?.folderId ?? null,
+                createdAt: previousRecord?.createdAt ?? Date.now(),
+                updatedAt: Date.now(),
+              })
+            : await idbUpdateDocument(id, {
+                title: titleToSave,
+                content: latest.content,
+              });
           if (!updated) return;
           // 활성 문서가 여전히 동일하면 상태에도 최신 title 반영.
           const current = get();
@@ -268,13 +403,24 @@ export const useDocumentStore = create<DocumentState>()(
       setTitle: (title) => {
         set({ title, titleManual: true });
         const id = get().activeId;
+        const cloudUser = get().cloudUser;
         if (!id) return;
         scheduleSave(id, async () => {
           const latest = get();
-          const updated = await idbUpdateDocument(id, {
-            title: latest.title,
-            content: latest.content,
-          });
+          const previousRecord = cloudUser ? await getCloudDocument(cloudUser, id) : undefined;
+          const updated = cloudUser
+            ? await upsertCloudDocument(cloudUser, {
+                id,
+                title: latest.title,
+                content: latest.content,
+                folderId: previousRecord?.folderId ?? null,
+                createdAt: previousRecord?.createdAt ?? Date.now(),
+                updatedAt: Date.now(),
+              })
+            : await idbUpdateDocument(id, {
+                title: latest.title,
+                content: latest.content,
+              });
           if (!updated) return;
           const updatedSummary: DocumentSummary = {
             id: updated.id,
