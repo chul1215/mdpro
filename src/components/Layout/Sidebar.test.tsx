@@ -174,6 +174,23 @@ describe('Sidebar', () => {
     expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '새 문서' }));
   });
 
+  it('hides documents inside locked secure folders until the passcode unlocks them', () => {
+    const now = Date.now();
+    setFolders([{ id: 'secret', name: '비공개', locked: true }], null, []);
+    setDocs(
+      [
+        { id: 'public', title: '공개 문서', updatedAt: now, folderId: null },
+        { id: 'hidden', title: '비밀 문서', updatedAt: now, folderId: 'secret' },
+      ],
+      'public',
+    );
+
+    render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: '공개 문서' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '비밀 문서' })).not.toBeInTheDocument();
+  });
+
   it('prompts for a passcode before opening a locked folder', async () => {
     setFolders([{ id: 'secret', name: '비공개', locked: true }]);
     vi.spyOn(window, 'prompt').mockReturnValue('1234');

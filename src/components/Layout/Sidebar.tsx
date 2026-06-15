@@ -165,11 +165,20 @@ export function Sidebar() {
   const selectedFolderLocked = Boolean(
     selectedFolder?.locked && !isFolderUnlocked(selectedFolder.id),
   );
+  const isDocumentVisible = useCallback(
+    (folderId: string | null | undefined): boolean => {
+      if (!folderId) return true;
+      const folder = folders.find((item) => item.id === folderId);
+      if (!folder) return true;
+      return !folder.locked || isFolderUnlocked(folder.id);
+    },
+    [folders, isFolderUnlocked],
+  );
   const visibleDocuments = selectedFolderId
     ? selectedFolderLocked
       ? []
-      : documents.filter((doc) => doc.folderId === selectedFolderId)
-    : documents;
+      : documents.filter((doc) => doc.folderId === selectedFolderId && isDocumentVisible(doc.folderId))
+    : documents.filter((doc) => isDocumentVisible(doc.folderId));
 
   const handleTabClick = useCallback(
     (tab: SidebarTab) => {
