@@ -2,17 +2,33 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// 스토어 모킹: 실제 IDB 접근 없이 documents 배열과 스파이 함수를 주입한다.
 const createDocument = vi.fn(async () => 'new-id');
 const switchTo = vi.fn(async () => {});
 const removeDocument = vi.fn(async () => {});
+const moveDocument = vi.fn(async () => {});
+const createFolder = vi.fn(async () => 'folder-new');
+const setSelectedFolder = vi.fn((id: string | null) => {
+  mockFolderState = { ...mockFolderState, selectedFolderId: id };
+});
+const unlockFolder = vi.fn(async (_id: string, code: string) => code === '1234');
 
 type MockState = {
   activeId: string | null;
-  documents: Array<{ id: string; title: string; updatedAt: number }>;
+  documents: Array<{ id: string; title: string; updatedAt: number; folderId?: string | null }>;
   createDocument: typeof createDocument;
   switchTo: typeof switchTo;
   removeDocument: typeof removeDocument;
+  moveDocument: typeof moveDocument;
+};
+
+type MockFolderState = {
+  folders: Array<{ id: string; name: string; locked: boolean }>;
+  selectedFolderId: string | null;
+  unlockedFolderIds: string[];
+  createFolder: typeof createFolder;
+  setSelectedFolder: typeof setSelectedFolder;
+  unlockFolder: typeof unlockFolder;
+  isFolderUnlocked: (id: string) => boolean;
 };
 
 let mockState: MockState = {
@@ -21,10 +37,25 @@ let mockState: MockState = {
   createDocument,
   switchTo,
   removeDocument,
+  moveDocument,
+};
+
+let mockFolderState: MockFolderState = {
+  folders: [],
+  selectedFolderId: null,
+  unlockedFolderIds: [],
+  createFolder,
+  setSelectedFolder,
+  unlockFolder,
+  isFolderUnlocked: (id) => mockFolderState.unlockedFolderIds.includes(id),
 };
 
 vi.mock('../../stores/documentStore', () => ({
   useDocumentStore: <T,>(selector: (s: MockState) => T) => selector(mockState),
+}));
+
+vi.mock('../../stores/folderStore', () => ({
+  useFolderStore: <T,>(selector: (s: MockFolderState) => T) => selector(mockFolderState),
 }));
 
 import { Sidebar } from './Sidebar';
@@ -37,6 +68,23 @@ function setDocs(docs: MockState['documents'], activeId: string | null = null) {
     createDocument,
     switchTo,
     removeDocument,
+    moveDocument,
+  };
+}
+
+function setFolders(
+  folders: MockFolderState['folders'],
+  selectedFolderId: string | null = null,
+  unlockedFolderIds: string[] = [],
+) {
+  mockFolderState = {
+    folders,
+    selectedFolderId,
+    unlockedFolderIds,
+    createFolder,
+    setSelectedFolder,
+    unlockFolder,
+    isFolderUnlocked: (id) => mockFolderState.unlockedFolderIds.includes(id),
   };
 }
 
@@ -47,7 +95,13 @@ describe('Sidebar', () => {
     createDocument.mockClear();
     switchTo.mockClear();
     removeDocument.mockClear();
+    moveDocument.mockClear();
+    createFolder.mockClear();
+    setSelectedFolder.mockClear();
+    unlockFolder.mockClear();
+    vi.restoreAllMocks();
     setDocs([], null);
+    setFolders([], null, []);
   });
 
   it('renders new document button when list is empty', () => {
@@ -75,6 +129,35 @@ describe('Sidebar', () => {
     expect(screen.getByText('Gamma')).toBeInTheDocument();
   });
 
+  it('filters documents by the selected folder', () => {
+    const now = Date.now();
+    setFolders([{ id: 'folder-a', name: '업무', locked: false }], 'folder-a');
+    setDocs(
+      [
+        { id: 'a', title: 'Alpha', updatedAt: now, folderId: 'folder-a' },
+        { id: 'b', title: 'Beta', updatedAt: now, folderId: null },
+      ],
+      'a',
+    );
+
+    render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Alpha' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Beta' })).not.toBeInTheDocument();
+  });
+
+  it('prompts for a passcode before opening a locked folder', async () => {
+    setFolders([{ id: 'secret', name: '비공개', locked: true }]);
+    vi.spyOn(window, 'prompt').mockReturnValue('1234');
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '비공개 잠김' }));
+
+    expect(unlockFolder).toHaveBeenCalledWith('secret', '1234');
+    expect(setSelectedFolder).toHaveBeenCalledWith('secret');
+  });
+
   it('marks the active item with aria-current=true', () => {
     const now = Date.now();
     setDocs(
@@ -85,7 +168,6 @@ describe('Sidebar', () => {
       'b',
     );
     render(<Sidebar />);
-    // 활성 아이템만 aria-current를 가진다. aria-label로 정확 매칭한다.
     const betaButton = screen.getByRole('button', { name: 'Beta' });
     expect(betaButton).toHaveAttribute('aria-current', 'true');
     const alphaButton = screen.getByRole('button', { name: 'Alpha' });
@@ -114,16 +196,26 @@ describe('Sidebar', () => {
     expect(switchTo).toHaveBeenCalledWith('b');
   });
 
+  it('moves a document to a different folder from the document row', async () => {
+    const now = Date.now();
+    setFolders([{ id: 'folder-a', name: '업무', locked: false }]);
+    setDocs([{ id: 'a', title: 'Alpha', updatedAt: now }], 'a');
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.selectOptions(screen.getByLabelText('Alpha 폴더 이동'), 'folder-a');
+
+    expect(moveDocument).toHaveBeenCalledWith('a', 'folder-a');
+  });
+
   it('opens confirm dialog and calls removeDocument on confirm', async () => {
     const now = Date.now();
     setDocs([{ id: 'a', title: 'Alpha', updatedAt: now }], 'a');
     const user = userEvent.setup();
     render(<Sidebar />);
 
-    // 삭제 아이콘 버튼은 aria-label="Alpha 삭제".
     await user.click(screen.getByRole('button', { name: 'Alpha 삭제' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    // switchTo는 호출되지 않아야 한다(stopPropagation).
     expect(switchTo).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: '삭제' }));

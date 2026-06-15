@@ -39,6 +39,18 @@ describe('storage/documents', () => {
     expect(r.content).toBe('# hi');
   });
 
+  it('createDocument and updateDocument persist folder assignment', async () => {
+    const r = await createDocument({ title: '보관 문서', folderId: 'folder-a' });
+    expect(r.folderId).toBe('folder-a');
+
+    const list = await listDocuments();
+    expect(list[0]).toMatchObject({ id: r.id, folderId: 'folder-a' });
+
+    const moved = await updateDocument(r.id, { folderId: null });
+    expect(moved?.folderId).toBeNull();
+    expect((await getDocument(r.id))?.folderId).toBeNull();
+  });
+
   it('listDocuments returns summaries sorted by updatedAt desc', async () => {
     const a = await createDocument({ title: 'A' });
     await new Promise((r) => setTimeout(r, 2));
@@ -47,7 +59,7 @@ describe('storage/documents', () => {
     const c = await createDocument({ title: 'C' });
     const list = await listDocuments();
     expect(list.map((s) => s.id)).toEqual([c.id, b.id, a.id]);
-    expect(list[0]).toEqual({ id: c.id, title: 'C', updatedAt: c.updatedAt });
+    expect(list[0]).toEqual({ id: c.id, title: 'C', folderId: null, updatedAt: c.updatedAt });
   });
 
   it('getDocument returns the full record or undefined', async () => {

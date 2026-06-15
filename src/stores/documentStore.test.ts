@@ -95,6 +95,26 @@ describe('documentStore', () => {
     expect(after.titleManual).toBe(false);
   });
 
+  it('createDocument can assign the active folder and moveDocument changes folder', async () => {
+    await useDocumentStore.getState().hydrate();
+    const id = await useDocumentStore
+      .getState()
+      .createDocument({ title: '폴더 문서', folderId: 'folder-a' });
+
+    expect(useDocumentStore.getState().documents[0]).toMatchObject({
+      id,
+      folderId: 'folder-a',
+    });
+    expect((await getDocument(id))?.folderId).toBe('folder-a');
+
+    await useDocumentStore.getState().moveDocument(id, null);
+    expect(useDocumentStore.getState().documents[0]).toMatchObject({
+      id,
+      folderId: null,
+    });
+    expect((await getDocument(id))?.folderId).toBeNull();
+  });
+
   it('setContent derives title from H1 when titleManual is false', async () => {
     await useDocumentStore.getState().hydrate();
     useDocumentStore.getState().setContent('# 안녕\n\n내용');

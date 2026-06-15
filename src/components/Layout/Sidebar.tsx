@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
-import { BookUser, FilePlus, FileText, Inbox, List, Trash2 } from 'lucide-react';
+import { BookUser, FilePlus, FileText, Folder, FolderPlus, Inbox, List, Lock, Shield, Trash2 } from 'lucide-react';
 import { useUIStore, type SidebarTab } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
+import { useFolderStore } from '../../stores/folderStore';
 import { ConfirmDialog } from '../Modal/ConfirmDialog';
 import { OutlinePanel } from './OutlinePanel';
 import { InboxPanel } from '../Sharing/InboxPanel';
@@ -57,14 +58,61 @@ export function Sidebar() {
   const createDocument = useDocumentStore((s) => s.createDocument);
   const switchTo = useDocumentStore((s) => s.switchTo);
   const removeDocument = useDocumentStore((s) => s.removeDocument);
+  const moveDocument = useDocumentStore((s) => s.moveDocument);
+  const folders = useFolderStore((s) => s.folders);
+  const selectedFolderId = useFolderStore((s) => s.selectedFolderId);
+  const createFolder = useFolderStore((s) => s.createFolder);
+  const setSelectedFolder = useFolderStore((s) => s.setSelectedFolder);
+  const unlockFolder = useFolderStore((s) => s.unlockFolder);
+  const isFolderUnlocked = useFolderStore((s) => s.isFolderUnlocked);
   const user = useAuthStore((s) => s.user);
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
 
   const handleCreate = useCallback(async () => {
-    await createDocument();
+    const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
+    const folderId = selectedFolder && isFolderUnlocked(selectedFolder.id)
+      ? selectedFolder.id
+      : null;
+    await createDocument({ folderId });
     closeIfMobile(setSidebarOpen);
-  }, [createDocument, setSidebarOpen]);
+  }, [createDocument, folders, isFolderUnlocked, selectedFolderId, setSidebarOpen]);
+
+  const handleCreateFolder = useCallback(async () => {
+    const name = window.prompt('새 폴더 이름을 입력하세요.', '새 폴더');
+    if (!name) return;
+    await createFolder({ name });
+  }, [createFolder]);
+
+  const handleCreateSecureFolder = useCallback(async () => {
+    const name = window.prompt('보안 폴더 이름을 입력하세요.', '비공개');
+    if (!name) return;
+    const passcode = window.prompt('폴더 암호코드를 입력하세요.');
+    if (!passcode) return;
+    await createFolder({ name, passcode });
+  }, [createFolder]);
+
+  const handleSelectFolder = useCallback(
+    async (id: string | null) => {
+      if (!id) {
+        setSelectedFolder(null);
+        return;
+      }
+      const folder = folders.find((item) => item.id === id);
+      if (!folder) return;
+      if (folder.locked && !isFolderUnlocked(id)) {
+        const passcode = window.prompt('폴더 암호코드를 입력하세요.');
+        if (!passcode) return;
+        const ok = await unlockFolder(id, passcode);
+        if (!ok) {
+          window.alert('암호코드가 올바르지 않습니다.');
+          return;
+        }
+      }
+      setSelectedFolder(id);
+    },
+    [folders, isFolderUnlocked, setSelectedFolder, unlockFolder],
+  );
 
   const handleSelect = useCallback(
     async (id: string) => {
@@ -81,6 +129,16 @@ export function Sidebar() {
     setDeleteTarget(null);
     await removeDocument(id);
   }, [deleteTarget, removeDocument]);
+
+  const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
+  const selectedFolderLocked = Boolean(
+    selectedFolder?.locked && !isFolderUnlocked(selectedFolder.id),
+  );
+  const visibleDocuments = selectedFolderId
+    ? selectedFolderLocked
+      ? []
+      : documents.filter((doc) => doc.folderId === selectedFolderId)
+    : documents;
 
   const handleTabClick = useCallback(
     (tab: SidebarTab) => {
@@ -150,15 +208,68 @@ export function Sidebar() {
                   <FilePlus className="h-4 w-4" aria-hidden="true" />
                   <span>새 문서</span>
                 </button>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleCreateFolder}
+                    className="inline-flex items-center justify-center gap-1 rounded-lg border border-apple-border px-2 py-1.5 text-[12px] font-medium text-apple-ink hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
+                  >
+                    <FolderPlus className="h-3.5 w-3.5" aria-hidden="true" />
+                    폴더
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateSecureFolder}
+                    className="inline-flex items-center justify-center gap-1 rounded-lg border border-apple-border px-2 py-1.5 text-[12px] font-medium text-apple-ink hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
+                  >
+                    <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+                    보안
+                  </button>
+                </div>
+                <div className="flex flex-col gap-1 border-t border-apple-border pt-2 dark:border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectFolder(null)}
+                    aria-current={selectedFolderId === null ? 'true' : undefined}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] ${
+                      selectedFolderId === null
+                        ? 'bg-blue-500 text-white'
+                        : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5'
+                    }`}
+                  >
+                    <Folder className="h-3.5 w-3.5" aria-hidden="true" />
+                    전체 문서
+                  </button>
+                  {folders.map((folder) => {
+                    const locked = folder.locked && !isFolderUnlocked(folder.id);
+                    return (
+                      <button
+                        key={folder.id}
+                        type="button"
+                        onClick={() => handleSelectFolder(folder.id)}
+                        aria-label={locked ? `${folder.name} 잠김` : folder.name}
+                        aria-current={selectedFolderId === folder.id ? 'true' : undefined}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] ${
+                          selectedFolderId === folder.id
+                            ? 'bg-blue-500 text-white'
+                            : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5'
+                        }`}
+                      >
+                        {locked ? <Lock className="h-3.5 w-3.5" aria-hidden="true" /> : <Folder className="h-3.5 w-3.5" aria-hidden="true" />}
+                        <span className="truncate">{folder.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <nav className="flex-1 overflow-y-auto px-2 pb-3">
-                {documents.length === 0 ? (
+                {visibleDocuments.length === 0 ? (
                   <p className="px-2 py-4 text-center text-[12px] text-apple-ink/70 dark:text-white/70">
                     아직 문서가 없습니다
                   </p>
                 ) : (
                   <ul role="list" className="flex flex-col gap-0.5">
-                    {documents.map((doc) => {
+                    {visibleDocuments.map((doc) => {
                       const active = doc.id === activeId;
                       const displayTitle = doc.title.trim() || '제목 없음';
                       const itemClass = active
@@ -195,6 +306,22 @@ export function Sidebar() {
                                 {formatRelativeTime(doc.updatedAt)}
                               </span>
                             </button>
+                            <select
+                              aria-label={`${displayTitle} 폴더 이동`}
+                              value={doc.folderId ?? ''}
+                              onClick={(event) => event.stopPropagation()}
+                              onChange={(event) => {
+                                void moveDocument(doc.id, event.target.value || null);
+                              }}
+                              className="mt-1 w-full rounded-md border border-apple-border bg-white px-2 py-1 text-[11px] text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:bg-surface-4 dark:text-white"
+                            >
+                              <option value="">전체 문서</option>
+                              {folders.map((folder) => (
+                                <option key={folder.id} value={folder.id}>
+                                  {folder.locked ? '🔒 ' : ''}{folder.name}
+                                </option>
+                              ))}
+                            </select>
                             <button
                               type="button"
                               aria-label={`${displayTitle} 삭제`}

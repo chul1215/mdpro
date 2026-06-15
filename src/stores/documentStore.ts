@@ -19,9 +19,10 @@ type DocumentState = {
   loading: boolean;
 
   hydrate: () => Promise<void>;
-  createDocument: (init?: { title?: string; content?: string }) => Promise<string>;
+  createDocument: (init?: { title?: string; content?: string; folderId?: string | null }) => Promise<string>;
   switchTo: (id: string) => Promise<void>;
   removeDocument: (id: string) => Promise<void>;
+  moveDocument: (id: string, folderId: string | null) => Promise<void>;
   setContent: (content: string) => void;
   setTitle: (title: string) => void;
   flushSave: () => Promise<void>;
@@ -145,6 +146,7 @@ export const useDocumentStore = create<DocumentState>()(
         // 저장 레코드 / 목록 요약이 일관된 제목을 갖는다.
         const resolvedInit = {
           content: init?.content,
+          folderId: init?.folderId ?? null,
           title:
             init?.title ??
             (init?.content !== undefined
@@ -155,6 +157,7 @@ export const useDocumentStore = create<DocumentState>()(
         const summary: DocumentSummary = {
           id: record.id,
           title: record.title,
+          folderId: record.folderId,
           updatedAt: record.updatedAt,
         };
         clearTimer();
@@ -203,6 +206,24 @@ export const useDocumentStore = create<DocumentState>()(
         }
       },
 
+      moveDocument: async (id, folderId) => {
+        await flushPending();
+        const updated = await idbUpdateDocument(id, { folderId });
+        if (!updated) return;
+        const updatedSummary: DocumentSummary = {
+          id: updated.id,
+          title: updated.title,
+          folderId: updated.folderId,
+          updatedAt: updated.updatedAt,
+        };
+        set((s) => ({
+          documents: [
+            updatedSummary,
+            ...s.documents.filter((d) => d.id !== id),
+          ],
+        }));
+      },
+
       setContent: (content) => {
         const prev = get();
         const nextTitle = prev.titleManual
@@ -232,6 +253,7 @@ export const useDocumentStore = create<DocumentState>()(
           const updatedSummary: DocumentSummary = {
             id: updated.id,
             title: updated.title,
+            folderId: updated.folderId,
             updatedAt: updated.updatedAt,
           };
           set((s) => ({
@@ -257,6 +279,7 @@ export const useDocumentStore = create<DocumentState>()(
           const updatedSummary: DocumentSummary = {
             id: updated.id,
             title: updated.title,
+            folderId: updated.folderId,
             updatedAt: updated.updatedAt,
           };
           set((s) => ({
