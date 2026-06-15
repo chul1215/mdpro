@@ -11,8 +11,21 @@ import { useEditorStore } from '../../stores/editorStore';
 import { lightTheme, darkTheme, focusModePlugin, type FocusModeConfig } from './cmTheme';
 import { toggleBold, toggleItalic } from '../../lib/editor/commands';
 
+function makeFocusConfig(enabled: boolean): FocusModeConfig {
+  return {
+    enabled,
+    fadeOthers: true,
+    highlightCurrentLine: true,
+  };
+}
+
+function focusExtension(focusConfig: FocusModeConfig): Extension {
+  return focusConfig.enabled ? focusModePlugin(focusConfig) : [];
+}
+
 function buildExtensions(
   themeCompartment: Compartment,
+  focusCompartment: Compartment,
   theme: Theme,
   focusConfig: FocusModeConfig
 ): Extension[] {
@@ -44,12 +57,8 @@ function buildExtensions(
     EditorView.lineWrapping,
     EditorView.contentAttributes.of({ 'aria-label': '마크다운 편집기' }),
     themeCompartment.of(theme === 'dark' ? darkTheme : lightTheme),
+    focusCompartment.of(focusExtension(focusConfig)),
   ];
-
-  // 포커스 모드 플러그인 추가
-  if (focusConfig.enabled) {
-    extensions.push(focusModePlugin(focusConfig));
-  }
 
   extensions.push(
     EditorView.updateListener.of((update) => {
@@ -70,14 +79,9 @@ export function Editor() {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const themeCompartmentRef = useRef(new Compartment());
+  const focusCompartmentRef = useRef(new Compartment());
   const theme = useUIStore((s) => s.theme);
   const focusMode = useUIStore((s) => s.focusMode);
-
-  const focusConfig: FocusModeConfig = {
-    enabled: focusMode,
-    fadeOthers: true,
-    highlightCurrentLine: true,
-  };
 
   useEffect(() => {
     if (!hostRef.current) return;
@@ -87,8 +91,9 @@ export function Editor() {
       doc: initialContent,
       extensions: buildExtensions(
         themeCompartmentRef.current,
+        focusCompartmentRef.current,
         useUIStore.getState().theme,
-        focusConfig
+        makeFocusConfig(useUIStore.getState().focusMode)
       ),
     });
 
@@ -105,8 +110,9 @@ export function Editor() {
             doc: state.content,
             extensions: buildExtensions(
               themeCompartmentRef.current,
+              focusCompartmentRef.current,
               useUIStore.getState().theme,
-              focusConfig
+              makeFocusConfig(useUIStore.getState().focusMode)
             ),
           }),
         );
@@ -134,10 +140,14 @@ export function Editor() {
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
+    const focusConfig = makeFocusConfig(focusMode);
     view.dispatch({
-      effects: themeCompartmentRef.current.reconfigure(
-        theme === 'dark' ? darkTheme : lightTheme,
-      ),
+      effects: [
+        themeCompartmentRef.current.reconfigure(
+          theme === 'dark' ? darkTheme : lightTheme,
+        ),
+        focusCompartmentRef.current.reconfigure(focusExtension(focusConfig)),
+      ],
     });
   }, [theme, focusMode]);
 

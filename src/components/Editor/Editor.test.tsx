@@ -9,7 +9,7 @@ import { useEditorStore } from '../../stores/editorStore';
 describe('Editor', () => {
   beforeEach(() => {
     localStorage.clear();
-    useUIStore.setState({ theme: 'light', viewMode: 'split', sidebarOpen: true });
+    useUIStore.setState({ theme: 'light', viewMode: 'split', sidebarOpen: true, focusMode: false });
     // documentStore는 IDB 기반이라 reset이 없다. 테스트용 초기 content/activeId만 주입한다.
     useDocumentStore.setState({
       activeId: null,
@@ -60,5 +60,20 @@ describe('Editor', () => {
     });
     expect(view.state.doc.toString()).toContain('B 문서');
     expect(view.state.doc.toString()).not.toContain('A 문서');
+  });
+
+  it('toggles focus mode decorations without remounting the editor', () => {
+    useDocumentStore.setState({ content: '첫 줄\n둘째 줄\n셋째 줄' });
+    render(<Editor />);
+    const host = screen.getByTestId('editor-host');
+    const initialView = useEditorStore.getState().view;
+    expect(host.querySelector('.cm-focus-mode-dimmed-line')).toBeNull();
+
+    act(() => {
+      useUIStore.setState({ focusMode: true });
+    });
+
+    expect(useEditorStore.getState().view).toBe(initialView);
+    expect(host.querySelector('.cm-focus-mode-dimmed-line')).not.toBeNull();
   });
 });
