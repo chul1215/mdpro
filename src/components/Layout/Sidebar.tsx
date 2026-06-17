@@ -349,7 +349,7 @@ export function Sidebar() {
                 ? '받은 문서함'
                 : '주소록'
         }
-        className="fixed inset-y-0 left-0 z-30 flex w-[min(18rem,calc(100vw-2rem))] flex-col bg-apple-bg pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-apple md:static md:h-full md:w-56 md:shrink-0 md:pb-0 md:pt-0 md:shadow-none dark:bg-surface-5"
+        className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,calc(100vw-2rem))] flex-col bg-apple-bg pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-apple md:static md:h-full md:w-56 md:shrink-0 md:pb-0 md:pt-0 md:shadow-none dark:bg-surface-5"
       >
         {/* 탭 네비게이션 */}
         <div className="flex border-b border-apple-border dark:border-white/10">

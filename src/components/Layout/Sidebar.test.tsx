@@ -196,12 +196,14 @@ describe('Sidebar', () => {
     expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '새 문서' }));
   });
 
-  it('offsets the fixed mobile sidebar below the device safe area', () => {
+  it('keeps the fixed mobile sidebar above the app header and device safe area', () => {
     render(<Sidebar />);
 
     const sidebar = screen.getByRole('navigation', { name: '문서 목록' });
     expect(sidebar).toHaveClass('pt-[env(safe-area-inset-top)]');
     expect(sidebar).toHaveClass('md:pt-0');
+    // TopBar uses z-40; the mobile sidebar must stack above it or the top controls are covered.
+    expect(sidebar).toHaveClass('z-50');
   });
 
   it('keeps secure folder documents out of all documents even after the folder is unlocked', () => {
