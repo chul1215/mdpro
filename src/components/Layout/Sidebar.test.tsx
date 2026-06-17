@@ -196,9 +196,9 @@ describe('Sidebar', () => {
     expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '새 문서' }));
   });
 
-  it('hides documents inside locked secure folders until the passcode unlocks them', () => {
+  it('keeps secure folder documents out of all documents even after the folder is unlocked', () => {
     const now = Date.now();
-    setFolders([{ id: 'secret', name: '비공개', locked: true }], null, []);
+    setFolders([{ id: 'secret', name: '비공개', locked: true }], null, ['secret']);
     setDocs(
       [
         { id: 'public', title: '공개 문서', updatedAt: now, folderId: null },
@@ -213,16 +213,52 @@ describe('Sidebar', () => {
     expect(screen.queryByRole('button', { name: '비밀 문서' })).not.toBeInTheDocument();
   });
 
+  it('shows secure folder documents only inside that unlocked secure folder', () => {
+    const now = Date.now();
+    setFolders([{ id: 'secret', name: '비공개', locked: true }], 'secret', ['secret']);
+    setDocs(
+      [
+        { id: 'public', title: '공개 문서', updatedAt: now, folderId: null },
+        { id: 'hidden', title: '비밀 문서', updatedAt: now, folderId: 'secret' },
+      ],
+      'hidden',
+    );
+
+    render(<Sidebar />);
+
+    expect(screen.queryByRole('button', { name: '공개 문서' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '비밀 문서' })).toBeInTheDocument();
+  });
+
   it('prompts for a passcode before opening a locked folder', async () => {
     setFolders([{ id: 'secret', name: '비공개', locked: true }]);
-    vi.spyOn(window, 'prompt').mockReturnValue('1234');
     const user = userEvent.setup();
 
     render(<Sidebar />);
     await user.click(screen.getByRole('button', { name: '비공개 잠김' }));
 
+    const passcodeInput = screen.getByLabelText('폴더 암호코드');
+    expect(passcodeInput).toHaveAttribute('type', 'password');
+    await user.type(passcodeInput, '1234');
+    await user.click(screen.getByRole('button', { name: '열기' }));
+
     expect(unlockFolder).toHaveBeenCalledWith('secret', '1234');
     expect(setSelectedFolder).toHaveBeenCalledWith('secret');
+  });
+
+  it('uses a masked password input when creating a secure folder', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('비공개');
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '보안' }));
+
+    const passcodeInput = screen.getByLabelText('새 폴더 암호코드');
+    expect(passcodeInput).toHaveAttribute('type', 'password');
+    await user.type(passcodeInput, '1234');
+    await user.click(screen.getByRole('button', { name: '생성' }));
+
+    expect(createFolder).toHaveBeenCalledWith({ name: '비공개', passcode: '1234' });
   });
 
   it('marks the active item with aria-current=true', () => {
@@ -310,11 +346,15 @@ describe('Sidebar', () => {
 
   it('requires the passcode before deleting a locked folder', async () => {
     setFolders([{ id: 'secret', name: '비공개', locked: true }]);
-    vi.spyOn(window, 'prompt').mockReturnValue('1234');
     const user = userEvent.setup();
 
     render(<Sidebar />);
     await user.click(screen.getByRole('button', { name: '비공개 잠김 폴더 삭제' }));
+
+    const passcodeInput = screen.getByLabelText('폴더 삭제 암호코드');
+    expect(passcodeInput).toHaveAttribute('type', 'password');
+    await user.type(passcodeInput, '1234');
+    await user.click(screen.getByRole('button', { name: '확인' }));
 
     expect(unlockFolder).toHaveBeenCalledWith('secret', '1234');
     expect(screen.getByRole('dialog')).toBeInTheDocument();

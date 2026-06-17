@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { BookUser, FilePlus, FileText, Folder, FolderPlus, Inbox, List, Lock, Shield, Trash2 } from 'lucide-react';
 import { useUIStore, type SidebarTab } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
@@ -11,6 +13,12 @@ import { useAuthStore } from '../../stores/authStore';
 
 type DeleteTarget = { id: string; title: string };
 type FolderDeleteTarget = { id: string; name: string; locked: boolean };
+type PasscodePrompt = {
+  title: string;
+  label: string;
+  confirmLabel: string;
+  onSubmit: (passcode: string) => Promise<void> | void;
+};
 
 const TABS: Array<{
   value: SidebarTab;
@@ -50,6 +58,108 @@ function closeIfMobile(setOpen: (v: boolean) => void): void {
   if (isMobile) setOpen(false);
 }
 
+function PasscodeDialog({
+  prompt,
+  onCancel,
+}: {
+  prompt: PasscodePrompt | null;
+  onCancel: () => void;
+}) {
+  const titleId = useId();
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [value, setValue] = useState('');
+
+  const handleCancel = useCallback(() => {
+    setValue('');
+    onCancel();
+  }, [onCancel]);
+
+  useEffect(() => {
+    if (!prompt) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+    const handleEsc = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleCancel();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [prompt, handleCancel]);
+
+  if (!prompt) return null;
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const passcode = value.trim();
+    if (!passcode) return;
+    setValue('');
+    void prompt.onSubmit(passcode);
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) handleCancel();
+      }}
+    >
+      <form
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm rounded-xl bg-white p-6 shadow-apple ring-1 ring-black/5 dark:bg-surface-1 dark:ring-white/10"
+      >
+        <h2
+          id={titleId}
+          className="font-display text-[17px] font-semibold tracking-tight text-apple-ink dark:text-white"
+        >
+          {prompt.title}
+        </h2>
+        <label
+          htmlFor={inputId}
+          className="mt-4 block text-[13px] font-medium text-apple-ink dark:text-white"
+        >
+          {prompt.label}
+        </label>
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="password"
+          autoComplete="current-password"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          className="mt-2 w-full rounded-lg border border-apple-border bg-white px-3 py-2 text-[14px] text-apple-ink outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-white/10 dark:bg-surface-4 dark:text-white"
+        />
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="rounded-lg px-4 py-1.5 text-[13px] font-medium text-apple-ink transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white dark:hover:bg-white/10"
+          >
+            취소
+          </button>
+          <button
+            type="submit"
+            className="rounded-lg bg-blue-500 px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+            disabled={value.trim().length === 0}
+          >
+            {prompt.confirmLabel}
+          </button>
+        </div>
+      </form>
+    </div>,
+    document.body,
+  );
+}
+
 export function Sidebar() {
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
   const sidebarTab = useUIStore((s) => s.sidebarTab);
@@ -71,6 +181,7 @@ export function Sidebar() {
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [folderDeleteTarget, setFolderDeleteTarget] = useState<FolderDeleteTarget | null>(null);
+  const [passcodePrompt, setPasscodePrompt] = useState<PasscodePrompt | null>(null);
 
   const handleCreate = useCallback(async () => {
     const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
@@ -90,9 +201,15 @@ export function Sidebar() {
   const handleCreateSecureFolder = useCallback(async () => {
     const name = window.prompt('보안 폴더 이름을 입력하세요.', '비공개');
     if (!name) return;
-    const passcode = window.prompt('폴더 암호코드를 입력하세요.');
-    if (!passcode) return;
-    await createFolder({ name, passcode });
+    setPasscodePrompt({
+      title: '보안 폴더 암호코드 설정',
+      label: '새 폴더 암호코드',
+      confirmLabel: '생성',
+      onSubmit: async (passcode) => {
+        setPasscodePrompt(null);
+        await createFolder({ name, passcode });
+      },
+    });
   }, [createFolder]);
 
   const handleSelectFolder = useCallback(
@@ -104,13 +221,21 @@ export function Sidebar() {
       const folder = folders.find((item) => item.id === id);
       if (!folder) return;
       if (folder.locked && !isFolderUnlocked(id)) {
-        const passcode = window.prompt('폴더 암호코드를 입력하세요.');
-        if (!passcode) return;
-        const ok = await unlockFolder(id, passcode);
-        if (!ok) {
-          window.alert('암호코드가 올바르지 않습니다.');
-          return;
-        }
+        setPasscodePrompt({
+          title: `${folder.name} 보안 폴더 열기`,
+          label: '폴더 암호코드',
+          confirmLabel: '열기',
+          onSubmit: async (passcode) => {
+            const ok = await unlockFolder(id, passcode);
+            if (!ok) {
+              window.alert('암호코드가 올바르지 않습니다.');
+              return;
+            }
+            setPasscodePrompt(null);
+            setSelectedFolder(id);
+          },
+        });
+        return;
       }
       setSelectedFolder(id);
     },
@@ -120,13 +245,21 @@ export function Sidebar() {
   const handleRequestDeleteFolder = useCallback(
     async (folder: FolderDeleteTarget) => {
       if (folder.locked && !isFolderUnlocked(folder.id)) {
-        const passcode = window.prompt('폴더 삭제를 위해 암호코드를 입력하세요.');
-        if (!passcode) return;
-        const ok = await unlockFolder(folder.id, passcode);
-        if (!ok) {
-          window.alert('암호코드가 올바르지 않습니다.');
-          return;
-        }
+        setPasscodePrompt({
+          title: `${folder.name} 폴더 삭제 확인`,
+          label: '폴더 삭제 암호코드',
+          confirmLabel: '확인',
+          onSubmit: async (passcode) => {
+            const ok = await unlockFolder(folder.id, passcode);
+            if (!ok) {
+              window.alert('암호코드가 올바르지 않습니다.');
+              return;
+            }
+            setPasscodePrompt(null);
+            setFolderDeleteTarget(folder);
+          },
+        });
+        return;
       }
       setFolderDeleteTarget(folder);
     },
@@ -165,20 +298,26 @@ export function Sidebar() {
   const selectedFolderLocked = Boolean(
     selectedFolder?.locked && !isFolderUnlocked(selectedFolder.id),
   );
-  const isDocumentVisible = useCallback(
+  const isDocumentVisibleInSelectedScope = useCallback(
     (folderId: string | null | undefined): boolean => {
+      if (selectedFolderId === null) {
+        if (!folderId) return true;
+        const folder = folders.find((item) => item.id === folderId);
+        // 전체 문서에서는 보안 폴더 문서를 잠금 해제 여부와 무관하게 숨긴다.
+        return !folder?.locked;
+      }
       if (!folderId) return true;
       const folder = folders.find((item) => item.id === folderId);
       if (!folder) return true;
       return !folder.locked || isFolderUnlocked(folder.id);
     },
-    [folders, isFolderUnlocked],
+    [folders, isFolderUnlocked, selectedFolderId],
   );
   const visibleDocuments = selectedFolderId
     ? selectedFolderLocked
       ? []
-      : documents.filter((doc) => doc.folderId === selectedFolderId && isDocumentVisible(doc.folderId))
-    : documents.filter((doc) => isDocumentVisible(doc.folderId));
+      : documents.filter((doc) => doc.folderId === selectedFolderId && isDocumentVisibleInSelectedScope(doc.folderId))
+    : documents.filter((doc) => isDocumentVisibleInSelectedScope(doc.folderId));
 
   const handleTabClick = useCallback(
     (tab: SidebarTab) => {
@@ -463,6 +602,10 @@ export function Sidebar() {
           destructive
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteTarget(null)}
+        />
+        <PasscodeDialog
+          prompt={passcodePrompt}
+          onCancel={() => setPasscodePrompt(null)}
         />
       </aside>
     </>
