@@ -31,6 +31,14 @@ describe('Layout', () => {
     expect(sidebar).toHaveClass('md:w-56');
   });
 
+  it('uses dynamic viewport height and clips the app shell for mobile portrait layout', () => {
+    const { container } = render(<Layout />);
+    const shell = container.firstElementChild;
+
+    expect(shell).toHaveClass('h-dvh');
+    expect(shell).toHaveClass('overflow-hidden');
+  });
+
   it('hides preview in edit-only mode', () => {
     useUIStore.setState({ viewMode: 'edit' });
     render(<Layout />);

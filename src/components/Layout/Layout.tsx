@@ -11,7 +11,7 @@ export function Layout() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
 
   return (
-    <div className="relative flex h-full w-full flex-row bg-apple-bg text-apple-ink dark:bg-black dark:text-white">
+    <div className="relative flex h-dvh w-full flex-row overflow-hidden bg-apple-bg text-apple-ink dark:bg-black dark:text-white">
       {sidebarOpen && <Sidebar />}
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />

@@ -104,6 +104,14 @@ describe('TopBar', () => {
     expect(screen.getByRole('radio', { name: '편집만' })).toHaveClass('h-11', 'min-w-11');
   });
 
+  it('adds mobile safe-area top padding so the header is not covered in portrait browsers', () => {
+    render(<TopBar />);
+
+    const header = screen.getByRole('banner');
+    expect(header).toHaveClass('pt-[calc(env(safe-area-inset-top)+0.5rem)]');
+    expect(header).toHaveClass('sm:pt-0');
+  });
+
   it('moves secondary actions into a mobile more menu', async () => {
     const user = userEvent.setup();
     render(<TopBar />);

@@ -54,7 +54,7 @@ export function TopBar() {
   return (
     <header
       role="banner"
-      className={`relative z-40 flex min-h-12 shrink-0 flex-wrap items-center gap-2 px-2 py-2 text-white sm:flex-nowrap sm:gap-3 sm:px-3 sm:py-0 ${GLASS_BG}`}
+      className={`relative z-40 flex min-h-12 shrink-0 flex-wrap items-center gap-2 px-2 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] text-white sm:flex-nowrap sm:gap-3 sm:px-3 sm:py-0 sm:pt-0 ${GLASS_BG}`}
     >
       <div className="flex shrink-0 items-center gap-2">
         <button
