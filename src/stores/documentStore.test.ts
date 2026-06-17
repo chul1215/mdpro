@@ -105,6 +105,29 @@ describe('documentStore', () => {
     expect(useDocumentStore.getState().content).toContain('비밀 본문');
   });
 
+  it('switchTo a public document re-locks previously unlocked secure folders', async () => {
+    const publicId = (await idbCreateDocument({
+      title: '공개',
+      content: '# 공개\n\n공개 본문',
+    })).id;
+    const secretId = (await idbCreateDocument({
+      title: '비밀',
+      content: '# 비밀\n\n비밀 본문',
+      folderId: 'secret',
+    })).id;
+    useFolderStore.setState({
+      folders: [{ id: 'secret', name: '비공개', locked: true, passcodeHash: 'x', createdAt: 1 }],
+      unlockedFolderIds: ['secret'],
+    });
+    await useDocumentStore.getState().switchTo(secretId);
+    expect(useFolderStore.getState().unlockedFolderIds).toContain('secret');
+
+    await useDocumentStore.getState().switchTo(publicId);
+
+    expect(useDocumentStore.getState().activeId).toBe(publicId);
+    expect(useFolderStore.getState().unlockedFolderIds).not.toContain('secret');
+  });
+
   it('hydrate on empty DB creates and activates a new document', async () => {
     await useDocumentStore.getState().hydrate();
     const s = useDocumentStore.getState();

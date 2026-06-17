@@ -256,6 +256,22 @@ describe('Sidebar', () => {
     expect(setSelectedFolder).toHaveBeenCalledWith('secret');
   });
 
+  it('prompts for the passcode again every time a secure folder is opened', async () => {
+    setFolders([{ id: 'secret', name: '비공개', locked: true }], null, ['secret']);
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '비공개' }));
+
+    const passcodeInput = screen.getByLabelText('폴더 암호코드');
+    expect(passcodeInput).toHaveAttribute('type', 'password');
+    await user.type(passcodeInput, '1234');
+    await user.click(screen.getByRole('button', { name: '열기' }));
+
+    expect(unlockFolder).toHaveBeenCalledWith('secret', '1234');
+    expect(setSelectedFolder).toHaveBeenCalledWith('secret');
+  });
+
   it('uses a masked password input when creating a secure folder', async () => {
     vi.spyOn(window, 'prompt').mockReturnValue('비공개');
     const user = userEvent.setup();

@@ -220,7 +220,7 @@ export function Sidebar() {
       }
       const folder = folders.find((item) => item.id === id);
       if (!folder) return;
-      if (folder.locked && !isFolderUnlocked(id)) {
+      if (folder.locked) {
         setPasscodePrompt({
           title: `${folder.name} 보안 폴더 열기`,
           label: '폴더 암호코드',
@@ -239,7 +239,7 @@ export function Sidebar() {
       }
       setSelectedFolder(id);
     },
-    [folders, isFolderUnlocked, setSelectedFolder, unlockFolder],
+    [folders, setSelectedFolder, unlockFolder],
   );
 
   const handleRequestDeleteFolder = useCallback(

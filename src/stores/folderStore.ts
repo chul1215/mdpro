@@ -20,6 +20,17 @@ type CreateFolderInput = {
   passcode?: string;
 };
 
+function unlockedIdsForScope(
+  folders: FolderRecord[],
+  unlockedFolderIds: string[],
+  folderId: string | null | undefined,
+): string[] {
+  if (!folderId) return [];
+  const folder = folders.find((item) => item.id === folderId);
+  if (!folder?.locked) return [];
+  return unlockedFolderIds.includes(folderId) ? [folderId] : [];
+}
+
 type FolderState = {
   folders: FolderRecord[];
   selectedFolderId: string | null;
@@ -126,7 +137,11 @@ export const useFolderStore = create<FolderState>()(
         }));
       },
 
-      setSelectedFolder: (id) => set({ selectedFolderId: id }),
+      setSelectedFolder: (id) =>
+        set((state) => ({
+          selectedFolderId: id,
+          unlockedFolderIds: unlockedIdsForScope(state.folders, state.unlockedFolderIds, id),
+        })),
 
       unlockFolder: async (id, passcode) => {
         const folder = get().folders.find((item) => item.id === id);
@@ -177,4 +192,10 @@ export function isFolderAccessible(folderId: string | null | undefined): boolean
   const folder = folders.find((item) => item.id === folderId);
   if (!folder) return true;
   return !folder.locked || unlockedFolderIds.includes(folderId);
+}
+
+export function lockSecureFoldersExcept(folderId: string | null | undefined): void {
+  useFolderStore.setState((state) => ({
+    unlockedFolderIds: unlockedIdsForScope(state.folders, state.unlockedFolderIds, folderId),
+  }));
 }

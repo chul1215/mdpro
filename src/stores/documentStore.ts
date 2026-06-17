@@ -10,7 +10,7 @@ import {
   type DocumentSummary,
 } from '../lib/storage/documents';
 import { extractTitleFromMarkdown } from '../lib/markdown/title';
-import { isFolderAccessible } from './folderStore';
+import { isFolderAccessible, lockSecureFoldersExcept } from './folderStore';
 import type { AppUser } from '../lib/auth/authService';
 import {
   deleteCloudDocument,
@@ -247,6 +247,7 @@ export const useDocumentStore = create<DocumentState>()(
           const summary = makeDocumentSummary(record);
           clearTimer();
           const auto = extractTitleFromMarkdown(record.content);
+          lockSecureFoldersExcept(record.folderId);
           set((s) => ({
             activeId: record.id,
             title: record.title,
@@ -278,6 +279,7 @@ export const useDocumentStore = create<DocumentState>()(
         // 저장된 content로부터 다시 auto 제목을 계산해 수동 여부 판정.
         // (idb 기본값 "# 제목 없음\n\n"도 동일 경로로 처리된다.)
         const auto = extractTitleFromMarkdown(record.content);
+        lockSecureFoldersExcept(record.folderId);
         set((s) => ({
           activeId: record.id,
           title: record.title,
@@ -306,6 +308,7 @@ export const useDocumentStore = create<DocumentState>()(
         }
         clearTimer();
         const auto = extractTitleFromMarkdown(record.content);
+        lockSecureFoldersExcept(record.folderId);
         set({
           activeId: record.id,
           title: record.title,

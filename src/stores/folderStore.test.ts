@@ -43,6 +43,25 @@ describe('folderStore', () => {
     expect(state.unlockedFolderIds).toContain(id);
   });
 
+  it('re-locks secure folders when another folder scope is selected', async () => {
+    const publicId = await useFolderStore.getState().createFolder({ name: '업무' });
+    const secretId = await useFolderStore
+      .getState()
+      .createFolder({ name: '비공개', passcode: '1234' });
+    await useFolderStore.getState().unlockFolder(secretId, '1234');
+    useFolderStore.getState().setSelectedFolder(secretId);
+    expect(useFolderStore.getState().unlockedFolderIds).toContain(secretId);
+
+    useFolderStore.getState().setSelectedFolder(publicId);
+    expect(useFolderStore.getState().selectedFolderId).toBe(publicId);
+    expect(useFolderStore.getState().unlockedFolderIds).not.toContain(secretId);
+
+    await useFolderStore.getState().unlockFolder(secretId, '1234');
+    useFolderStore.getState().setSelectedFolder(null);
+    expect(useFolderStore.getState().selectedFolderId).toBeNull();
+    expect(useFolderStore.getState().unlockedFolderIds).not.toContain(secretId);
+  });
+
   it('persists folders without persisting transient unlock state', async () => {
     const id = await useFolderStore
       .getState()
