@@ -108,6 +108,7 @@ export async function listInboxShares(user: AppUser | null): Promise<ShareRecord
   const snapshot = await getDocs(inboxQuery);
   return snapshot.docs
     .map((item) => mapShare(item))
+    .filter((share) => share.status === 'pending')
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 

@@ -80,9 +80,7 @@ export const useShareStore = create<ShareState>()((set, get) => ({
       await switchTo(id);
       await acceptShare(shareId);
       set((state) => ({
-        inbox: state.inbox.map((item) =>
-          item.id === shareId ? { ...item, status: 'accepted' } : item,
-        ),
+        inbox: state.inbox.filter((item) => item.id !== shareId),
       }));
       return id;
     } catch (error) {

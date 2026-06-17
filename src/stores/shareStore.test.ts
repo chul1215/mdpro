@@ -61,7 +61,7 @@ describe('shareStore', () => {
     expect(useShareStore.getState().inbox[0].title).toBe('받은 문서');
   });
 
-  it('accepts a share and creates a local document copy', async () => {
+  it('accepts a share, creates a local document copy, and removes it from the inbox', async () => {
     const { useShareStore } = await import('./shareStore');
     const createDocument = vi.fn(async () => 'new-doc');
     const switchTo = vi.fn(async () => undefined);
@@ -87,6 +87,6 @@ describe('shareStore', () => {
     expect(createDocument).toHaveBeenCalledWith({ title: '받은 문서', content: '# 받은 문서' });
     expect(switchTo).toHaveBeenCalledWith('new-doc');
     expect(acceptShare).toHaveBeenCalledWith('share-1');
-    expect(useShareStore.getState().inbox[0].status).toBe('accepted');
+    expect(useShareStore.getState().inbox).toEqual([]);
   });
 });

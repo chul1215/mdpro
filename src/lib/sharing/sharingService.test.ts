@@ -115,6 +115,19 @@ describe('sharingService', () => {
             createdAt: { toMillis: () => 9999 },
           }),
         },
+        {
+          id: 'share-accepted',
+          data: () => ({
+            senderUid: 'sender-3',
+            senderEmail: 'sender3@example.com',
+            recipientEmail: 'user@example.com',
+            title: '이미 가져온 문서',
+            content: '# 이미 가져온 문서',
+            sourceDocumentId: 'doc-3',
+            status: 'accepted',
+            createdAt: { toMillis: () => 10000 },
+          }),
+        },
       ],
     });
     const { listInboxShares } = await import('./sharingService');
