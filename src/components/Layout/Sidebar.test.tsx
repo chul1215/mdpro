@@ -40,6 +40,10 @@ type MockFolderState = {
   isFolderUnlocked: (id: string) => boolean;
 };
 
+type MockShareState = {
+  inbox: Array<{ id: string; status: 'pending' | 'accepted' }>;
+};
+
 let mockState: MockState = {
   activeId: null,
   documents: [],
@@ -60,12 +64,20 @@ let mockFolderState: MockFolderState = {
   isFolderUnlocked: (id) => mockFolderState.unlockedFolderIds.includes(id),
 };
 
+let mockShareState: MockShareState = {
+  inbox: [],
+};
+
 vi.mock('../../stores/documentStore', () => ({
   useDocumentStore: <T,>(selector: (s: MockState) => T) => selector(mockState),
 }));
 
 vi.mock('../../stores/folderStore', () => ({
   useFolderStore: <T,>(selector: (s: MockFolderState) => T) => selector(mockFolderState),
+}));
+
+vi.mock('../../stores/shareStore', () => ({
+  useShareStore: <T,>(selector: (s: MockShareState) => T) => selector(mockShareState),
 }));
 
 import { Sidebar } from './Sidebar';
@@ -99,6 +111,10 @@ function setFolders(
   };
 }
 
+function setInbox(inbox: MockShareState['inbox']) {
+  mockShareState = { inbox };
+}
+
 describe('Sidebar', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -114,6 +130,7 @@ describe('Sidebar', () => {
     vi.restoreAllMocks();
     setDocs([], null);
     setFolders([], null, []);
+    setInbox([]);
   });
 
   it('renders new document button when list is empty', () => {
@@ -204,6 +221,26 @@ describe('Sidebar', () => {
     expect(sidebar).toHaveClass('md:pt-0');
     // TopBar uses z-40; the mobile sidebar must stack above it or the top controls are covered.
     expect(sidebar).toHaveClass('z-50');
+  });
+
+  it('shows a red notification dot on the inbox tab when pending shared documents exist', () => {
+    setInbox([{ id: 'share-1', status: 'pending' }]);
+
+    render(<Sidebar />);
+
+    const inboxTab = screen.getByRole('tab', { name: /받은함/ });
+    const badge = within(inboxTab).getByLabelText('새로 받은 문서 있음');
+    expect(badge).toHaveClass('bg-red-500');
+    expect(badge).toHaveClass('rounded-full');
+  });
+
+  it('does not show the inbox notification dot when there are no pending shared documents', () => {
+    setInbox([{ id: 'share-1', status: 'accepted' }]);
+
+    render(<Sidebar />);
+
+    const inboxTab = screen.getByRole('tab', { name: /받은함/ });
+    expect(within(inboxTab).queryByLabelText('새로 받은 문서 있음')).not.toBeInTheDocument();
   });
 
   it('keeps secure folder documents out of all documents even after the folder is unlocked', () => {

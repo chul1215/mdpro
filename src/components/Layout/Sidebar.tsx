@@ -10,6 +10,7 @@ import { OutlinePanel } from './OutlinePanel';
 import { InboxPanel } from '../Sharing/InboxPanel';
 import { AddressBookPanel } from '../Sharing/AddressBookPanel';
 import { useAuthStore } from '../../stores/authStore';
+import { useShareStore } from '../../stores/shareStore';
 
 type DeleteTarget = { id: string; title: string };
 type FolderDeleteTarget = { id: string; name: string; locked: boolean };
@@ -178,6 +179,7 @@ export function Sidebar() {
   const unlockFolder = useFolderStore((s) => s.unlockFolder);
   const isFolderUnlocked = useFolderStore((s) => s.isFolderUnlocked);
   const user = useAuthStore((s) => s.user);
+  const hasPendingInbox = useShareStore((s) => s.inbox.some((share) => share.status === 'pending'));
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [folderDeleteTarget, setFolderDeleteTarget] = useState<FolderDeleteTarget | null>(null);
@@ -369,6 +371,12 @@ export function Sidebar() {
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
               <span>{label}</span>
+              {tab === 'inbox' && hasPendingInbox ? (
+                <span
+                  aria-label="새로 받은 문서 있음"
+                  className="absolute right-2 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-apple-bg dark:ring-surface-5"
+                />
+              ) : null}
             </button>
           ))}
         </div>
