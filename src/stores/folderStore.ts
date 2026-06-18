@@ -22,15 +22,43 @@ type CreateFolderInput = {
   parentId?: string | null;
 };
 
-function unlockedIdsForScope(
+function lockedIdsForScope(
   folders: FolderRecord[],
   unlockedFolderIds: string[],
   folderId: string | null | undefined,
 ): string[] {
   if (!folderId) return [];
-  const folder = folders.find((item) => item.id === folderId);
-  if (!folder?.locked) return [];
-  return unlockedFolderIds.includes(folderId) ? [folderId] : [];
+  const lockedIds: string[] = [];
+  const seen = new Set<string>();
+  let currentId: string | null | undefined = folderId;
+  while (currentId) {
+    if (seen.has(currentId)) break;
+    seen.add(currentId);
+    const folder = folders.find((item) => item.id === currentId);
+    if (!folder) break;
+    if (folder.locked) lockedIds.push(folder.id);
+    currentId = folder.parentId;
+  }
+  return lockedIds.filter((id) => unlockedFolderIds.includes(id));
+}
+
+function isFolderChainAccessible(
+  folders: FolderRecord[],
+  unlockedFolderIds: string[],
+  folderId: string | null | undefined,
+): boolean {
+  if (!folderId) return true;
+  const seen = new Set<string>();
+  let currentId: string | null | undefined = folderId;
+  while (currentId) {
+    if (seen.has(currentId)) return true;
+    seen.add(currentId);
+    const folder = folders.find((item) => item.id === currentId);
+    if (!folder) return true;
+    if (folder.locked && !unlockedFolderIds.includes(folder.id)) return false;
+    currentId = folder.parentId;
+  }
+  return true;
 }
 
 type FolderState = {
@@ -155,7 +183,7 @@ export const useFolderStore = create<FolderState>()(
       setSelectedFolder: (id) =>
         set((state) => ({
           selectedFolderId: id,
-          unlockedFolderIds: unlockedIdsForScope(state.folders, state.unlockedFolderIds, id),
+          unlockedFolderIds: lockedIdsForScope(state.folders, state.unlockedFolderIds, id),
         })),
 
       unlockFolder: async (id, passcode) => {
@@ -181,11 +209,11 @@ export const useFolderStore = create<FolderState>()(
           unlockedFolderIds: state.unlockedFolderIds.filter((item) => item !== id),
         })),
 
-      isFolderUnlocked: (id) => {
-        const folder = get().folders.find((item) => item.id === id);
-        if (!folder) return true;
-        return !folder.locked || get().unlockedFolderIds.includes(id);
-      },
+      isFolderUnlocked: (id) => isFolderChainAccessible(
+        get().folders,
+        get().unlockedFolderIds,
+        id,
+      ),
     }),
     {
       name: 'mdpro-folders',
@@ -202,15 +230,12 @@ export const useFolderStore = create<FolderState>()(
 // 폴더가 없거나(전체 문서) 알 수 없으면 접근 가능으로 본다. 잠긴 폴더는 해제된
 // 경우에만 접근 가능 → 잠금 문서가 에디터/뷰어에 노출되는 것을 막는 단일 진실 공급원.
 export function isFolderAccessible(folderId: string | null | undefined): boolean {
-  if (!folderId) return true;
   const { folders, unlockedFolderIds } = useFolderStore.getState();
-  const folder = folders.find((item) => item.id === folderId);
-  if (!folder) return true;
-  return !folder.locked || unlockedFolderIds.includes(folderId);
+  return isFolderChainAccessible(folders, unlockedFolderIds, folderId);
 }
 
 export function lockSecureFoldersExcept(folderId: string | null | undefined): void {
   useFolderStore.setState((state) => ({
-    unlockedFolderIds: unlockedIdsForScope(state.folders, state.unlockedFolderIds, folderId),
+    unlockedFolderIds: lockedIdsForScope(state.folders, state.unlockedFolderIds, folderId),
   }));
 }

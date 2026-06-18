@@ -78,6 +78,22 @@ describe('folderStore', () => {
     expect(useFolderStore.getState().unlockedFolderIds).not.toContain(secretId);
   });
 
+  it('keeps an unlocked secure parent accessible while a child folder is selected', async () => {
+    const secretId = await useFolderStore
+      .getState()
+      .createFolder({ name: '비공개', passcode: '1234' });
+    await useFolderStore.getState().unlockFolder(secretId, '1234');
+    const childId = await useFolderStore
+      .getState()
+      .createFolder({ name: '하위', parentId: secretId });
+
+    useFolderStore.getState().setSelectedFolder(childId);
+
+    expect(useFolderStore.getState().selectedFolderId).toBe(childId);
+    expect(useFolderStore.getState().unlockedFolderIds).toContain(secretId);
+    expect(useFolderStore.getState().isFolderUnlocked(childId)).toBe(true);
+  });
+
   it('persists folders without persisting transient unlock state', async () => {
     const id = await useFolderStore
       .getState()

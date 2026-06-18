@@ -101,6 +101,36 @@ function orderFoldersForTree<T extends FolderLike>(folders: T[]): T[] {
   return ordered;
 }
 
+function findLockedFolderInChain<T extends FolderLike & { locked: boolean }>(
+  folder: T,
+  folders: T[],
+): T | null {
+  let current: T | undefined = folder;
+  const seen = new Set<string>();
+  while (current) {
+    if (seen.has(current.id)) return null;
+    seen.add(current.id);
+    if (current.locked) return current;
+    current = current.parentId ? folders.find((item) => item.id === current?.parentId) : undefined;
+  }
+  return null;
+}
+
+function hasLockedFolderInChain<T extends FolderLike & { locked: boolean }>(
+  folder: T,
+  folders: T[],
+): boolean {
+  let current: T | undefined = folder;
+  const seen = new Set<string>();
+  while (current) {
+    if (seen.has(current.id)) return false;
+    seen.add(current.id);
+    if (current.locked) return true;
+    current = current.parentId ? folders.find((item) => item.id === current?.parentId) : undefined;
+  }
+  return false;
+}
+
 function PasscodeDialog({
   prompt,
   onCancel,
@@ -273,13 +303,14 @@ export function Sidebar() {
       }
       const folder = folders.find((item) => item.id === id);
       if (!folder) return;
-      if (folder.locked) {
+      const lockedFolder = findLockedFolderInChain(folder, folders);
+      if (lockedFolder) {
         setPasscodePrompt({
-          title: `${folder.name} 보안 폴더 열기`,
+          title: `${lockedFolder.name} 보안 폴더 열기`,
           label: '폴더 암호코드',
           confirmLabel: '열기',
           onSubmit: async (passcode) => {
-            const ok = await unlockFolder(id, passcode);
+            const ok = await unlockFolder(lockedFolder.id, passcode);
             if (!ok) {
               window.alert('암호코드가 올바르지 않습니다.');
               return;
@@ -350,20 +381,18 @@ export function Sidebar() {
   const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
   const orderedFolders = orderFoldersForTree(folders);
   const selectedFolderLocked = Boolean(
-    selectedFolder?.locked && !isFolderUnlocked(selectedFolder.id),
+    selectedFolder && !isFolderUnlocked(selectedFolder.id),
   );
   const isDocumentVisibleInSelectedScope = useCallback(
     (folderId: string | null | undefined): boolean => {
       if (selectedFolderId === null) {
         if (!folderId) return true;
         const folder = folders.find((item) => item.id === folderId);
-        // 전체 문서에서는 보안 폴더 문서를 잠금 해제 여부와 무관하게 숨긴다.
-        return !folder?.locked;
+        // 전체 문서에서는 보안 폴더와 그 하위폴더 문서를 잠금 해제 여부와 무관하게 숨긴다.
+        return folder ? !hasLockedFolderInChain(folder, folders) : true;
       }
       if (!folderId) return true;
-      const folder = folders.find((item) => item.id === folderId);
-      if (!folder) return true;
-      return !folder.locked || isFolderUnlocked(folder.id);
+      return isFolderUnlocked(folderId);
     },
     [folders, isFolderUnlocked, selectedFolderId],
   );
@@ -487,7 +516,7 @@ export function Sidebar() {
                     전체 문서
                   </button>
                   {orderedFolders.map((folder) => {
-                    const locked = folder.locked && !isFolderUnlocked(folder.id);
+                    const locked = !isFolderUnlocked(folder.id);
                     const depth = getFolderDepth(folder, folders);
                     const indentClass = depth > 0 ? 'pl-6' : 'pl-2';
                     return (

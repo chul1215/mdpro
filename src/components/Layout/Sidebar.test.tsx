@@ -94,6 +94,20 @@ function setDocs(docs: MockState['documents'], activeId: string | null = null) {
   };
 }
 
+function isMockFolderAccessible(id: string): boolean {
+  let currentId: string | null | undefined = id;
+  const seen = new Set<string>();
+  while (currentId) {
+    if (seen.has(currentId)) return true;
+    seen.add(currentId);
+    const folder = mockFolderState.folders.find((item) => item.id === currentId);
+    if (!folder) return true;
+    if (folder.locked && !mockFolderState.unlockedFolderIds.includes(folder.id)) return false;
+    currentId = folder.parentId;
+  }
+  return true;
+}
+
 function setFolders(
   folders: MockFolderState['folders'],
   selectedFolderId: string | null = null,
@@ -107,7 +121,7 @@ function setFolders(
     deleteFolder,
     setSelectedFolder,
     unlockFolder,
-    isFolderUnlocked: (id) => mockFolderState.unlockedFolderIds.includes(id),
+    isFolderUnlocked: isMockFolderAccessible,
   };
 }
 
@@ -236,6 +250,35 @@ describe('Sidebar', () => {
     await user.click(screen.getByRole('button', { name: '폴더' }));
 
     expect(createFolder).toHaveBeenCalledWith({ name: '하위', parentId: 'parent' });
+  });
+
+  it('creates a child folder inside an unlocked secure folder', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('하위');
+    setFolders([{ id: 'secret', name: '비공개', locked: true }], 'secret', ['secret']);
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '폴더' }));
+
+    expect(createFolder).toHaveBeenCalledWith({ name: '하위', parentId: 'secret' });
+  });
+
+  it('prompts for the secure parent passcode before opening a child folder', async () => {
+    setFolders([
+      { id: 'secret', name: '비공개', locked: true },
+      { id: 'child', name: '하위', locked: false, parentId: 'secret' },
+    ]);
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '하위 잠김' }));
+
+    const passcodeInput = screen.getByLabelText('폴더 암호코드');
+    await user.type(passcodeInput, '1234');
+    await user.click(screen.getByRole('button', { name: '열기' }));
+
+    expect(unlockFolder).toHaveBeenCalledWith('secret', '1234');
+    expect(setSelectedFolder).toHaveBeenCalledWith('child');
   });
 
   it('keeps the fixed mobile sidebar above the app header and device safe area', () => {
