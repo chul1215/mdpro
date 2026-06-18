@@ -24,6 +24,22 @@ describe('folderStore', () => {
     expect(state.selectedFolderId).toBe(id);
   });
 
+  it('creates a child folder under the selected parent folder', async () => {
+    const parentId = await useFolderStore.getState().createFolder({ name: '상위' });
+
+    const childId = await useFolderStore
+      .getState()
+      .createFolder({ name: '하위', parentId });
+
+    const state = useFolderStore.getState();
+    expect(state.folders.find((folder) => folder.id === childId)).toMatchObject({
+      id: childId,
+      name: '하위',
+      parentId,
+    });
+    expect(state.selectedFolderId).toBe(childId);
+  });
+
   it('creates a locked folder and unlocks it only with the correct passcode', async () => {
     useFolderStore.getState().setSelectedFolder(null);
     const id = await useFolderStore
@@ -85,6 +101,22 @@ describe('folderStore', () => {
     expect(state.folders).toHaveLength(0);
     expect(state.selectedFolderId).toBeNull();
     expect(state.unlockedFolderIds).not.toContain(id);
+  });
+
+  it('moves child folders up one level when deleting their parent folder', async () => {
+    const grandParentId = await useFolderStore.getState().createFolder({ name: '상위' });
+    const parentId = await useFolderStore
+      .getState()
+      .createFolder({ name: '중간', parentId: grandParentId });
+    const childId = await useFolderStore
+      .getState()
+      .createFolder({ name: '하위', parentId });
+
+    useFolderStore.getState().deleteFolder(parentId);
+
+    const state = useFolderStore.getState();
+    expect(state.folders.find((folder) => folder.id === parentId)).toBeUndefined();
+    expect(state.folders.find((folder) => folder.id === childId)?.parentId).toBe(grandParentId);
   });
 
   it('deletes a locked folder and removes its transient unlock state', async () => {

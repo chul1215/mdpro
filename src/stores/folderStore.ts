@@ -12,12 +12,14 @@ export type FolderRecord = {
   name: string;
   locked: boolean;
   passcodeHash?: string;
+  parentId?: string | null;
   createdAt: number;
 };
 
 type CreateFolderInput = {
   name: string;
   passcode?: string;
+  parentId?: string | null;
 };
 
 function unlockedIdsForScope(
@@ -102,16 +104,20 @@ export const useFolderStore = create<FolderState>()(
         });
       },
 
-      createFolder: async ({ name, passcode }) => {
+      createFolder: async ({ name, passcode, parentId }) => {
         const trimmed = name.trim() || '새 폴더';
         const normalizedPasscode = passcode?.trim() ?? '';
         const locked = normalizedPasscode.length > 0;
+        const validParentId = parentId && get().folders.some((folder) => folder.id === parentId)
+          ? parentId
+          : null;
         const id = makeId();
         const folder: FolderRecord = {
           id,
           name: trimmed,
           locked,
           ...(locked ? { passcodeHash: await hashPasscode(normalizedPasscode) } : {}),
+          ...(validParentId ? { parentId: validParentId } : {}),
           createdAt: Date.now(),
         };
         if (get().cloudUser) {
@@ -130,11 +136,20 @@ export const useFolderStore = create<FolderState>()(
       deleteFolder: (id) => {
         const cloudUser = get().cloudUser;
         if (cloudUser) void deleteCloudFolder(cloudUser, id);
-        set((state) => ({
-          folders: state.folders.filter((folder) => folder.id !== id),
-          selectedFolderId: state.selectedFolderId === id ? null : state.selectedFolderId,
-          unlockedFolderIds: state.unlockedFolderIds.filter((folderId) => folderId !== id),
-        }));
+        set((state) => {
+          const deletedFolder = state.folders.find((folder) => folder.id === id);
+          return {
+            folders: state.folders
+              .filter((folder) => folder.id !== id)
+              .map((folder) => (
+                folder.parentId === id
+                  ? { ...folder, parentId: deletedFolder?.parentId ?? null }
+                  : folder
+              )),
+            selectedFolderId: state.selectedFolderId === id ? null : state.selectedFolderId,
+            unlockedFolderIds: state.unlockedFolderIds.filter((folderId) => folderId !== id),
+          };
+        });
       },
 
       setSelectedFolder: (id) =>

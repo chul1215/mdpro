@@ -59,6 +59,48 @@ function closeIfMobile(setOpen: (v: boolean) => void): void {
   if (isMobile) setOpen(false);
 }
 
+type FolderLike = {
+  id: string;
+  name: string;
+  parentId?: string | null;
+};
+
+function getFolderDepth(folder: FolderLike, folders: FolderLike[]): number {
+  let depth = 0;
+  let parentId = folder.parentId ?? null;
+  const seen = new Set<string>([folder.id]);
+  while (parentId) {
+    const parent = folders.find((item) => item.id === parentId);
+    if (!parent || seen.has(parent.id)) break;
+    depth += 1;
+    seen.add(parent.id);
+    parentId = parent.parentId ?? null;
+  }
+  return depth;
+}
+
+function orderFoldersForTree<T extends FolderLike>(folders: T[]): T[] {
+  const byParent = new Map<string | null, T[]>();
+  for (const folder of folders) {
+    const parentId = folder.parentId && folders.some((item) => item.id === folder.parentId)
+      ? folder.parentId
+      : null;
+    byParent.set(parentId, [...(byParent.get(parentId) ?? []), folder]);
+  }
+  for (const items of byParent.values()) {
+    items.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  }
+  const ordered: T[] = [];
+  const visit = (parentId: string | null) => {
+    for (const folder of byParent.get(parentId) ?? []) {
+      ordered.push(folder);
+      visit(folder.id);
+    }
+  };
+  visit(null);
+  return ordered;
+}
+
 function PasscodeDialog({
   prompt,
   onCancel,
@@ -197,8 +239,12 @@ export function Sidebar() {
   const handleCreateFolder = useCallback(async () => {
     const name = window.prompt('새 폴더 이름을 입력하세요.', '새 폴더');
     if (!name) return;
-    await createFolder({ name });
-  }, [createFolder]);
+    const parentFolder = folders.find((folder) => folder.id === selectedFolderId);
+    await createFolder({
+      name,
+      ...(parentFolder ? { parentId: parentFolder.id } : {}),
+    });
+  }, [createFolder, folders, selectedFolderId]);
 
   const handleCreateSecureFolder = useCallback(async () => {
     const name = window.prompt('보안 폴더 이름을 입력하세요.', '비공개');
@@ -209,10 +255,15 @@ export function Sidebar() {
       confirmLabel: '생성',
       onSubmit: async (passcode) => {
         setPasscodePrompt(null);
-        await createFolder({ name, passcode });
+        const parentFolder = folders.find((folder) => folder.id === selectedFolderId);
+        await createFolder({
+          name,
+          passcode,
+          ...(parentFolder ? { parentId: parentFolder.id } : {}),
+        });
       },
     });
-  }, [createFolder]);
+  }, [createFolder, folders, selectedFolderId]);
 
   const handleSelectFolder = useCallback(
     async (id: string | null) => {
@@ -297,6 +348,7 @@ export function Sidebar() {
   }, [deleteTarget, removeDocument]);
 
   const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
+  const orderedFolders = orderFoldersForTree(folders);
   const selectedFolderLocked = Boolean(
     selectedFolder?.locked && !isFolderUnlocked(selectedFolder.id),
   );
@@ -434,8 +486,10 @@ export function Sidebar() {
                     <Folder className="h-3.5 w-3.5" aria-hidden="true" />
                     전체 문서
                   </button>
-                  {folders.map((folder) => {
+                  {orderedFolders.map((folder) => {
                     const locked = folder.locked && !isFolderUnlocked(folder.id);
+                    const depth = getFolderDepth(folder, folders);
+                    const indentClass = depth > 0 ? 'pl-6' : 'pl-2';
                     return (
                       <div key={folder.id} className="group flex items-center gap-1">
                         <button
@@ -443,7 +497,7 @@ export function Sidebar() {
                           onClick={() => handleSelectFolder(folder.id)}
                           aria-label={locked ? `${folder.name} 잠김` : folder.name}
                           aria-current={selectedFolderId === folder.id ? 'true' : undefined}
-                          className={`inline-flex min-w-0 flex-1 items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] ${
+                          className={`inline-flex min-w-0 flex-1 items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-[12px] ${indentClass} ${
                             selectedFolderId === folder.id
                               ? 'bg-blue-500 text-white'
                               : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5'
@@ -530,9 +584,9 @@ export function Sidebar() {
                               }
                             >
                               <option className="text-apple-ink" value="">전체 문서</option>
-                              {folders.map((folder) => (
+                              {orderedFolders.map((folder) => (
                                 <option className="text-apple-ink" key={folder.id} value={folder.id}>
-                                  {folder.locked ? '🔒 ' : ''}{folder.name}
+                                  {'　'.repeat(getFolderDepth(folder, folders))}{folder.locked ? '🔒 ' : ''}{folder.name}
                                 </option>
                               ))}
                             </select>

@@ -32,6 +32,7 @@ function mapCloudFolder(snapshot: QueryDocumentSnapshot<DocumentData>): FolderRe
     name: typeof data.name === 'string' ? data.name : '새 폴더',
     locked,
     ...(locked && typeof data.passcodeHash === 'string' ? { passcodeHash: data.passcodeHash } : {}),
+    ...(typeof data.parentId === 'string' ? { parentId: data.parentId } : {}),
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
   };
 }
@@ -55,6 +56,7 @@ export async function upsertCloudFolder(
       name: folder.name.trim() || '새 폴더',
       locked: folder.locked,
       ...(folder.locked && folder.passcodeHash ? { passcodeHash: folder.passcodeHash } : {}),
+      ...(folder.parentId ? { parentId: folder.parentId } : { parentId: null }),
       createdAt: folder.createdAt,
     },
     { merge: true },

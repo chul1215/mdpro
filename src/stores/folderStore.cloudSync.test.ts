@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => {
     name: string;
     locked: boolean;
     passcodeHash?: string;
+    parentId?: string | null;
     createdAt: number;
   }>();
   return {
@@ -86,6 +87,21 @@ describe('folderStore cloud sync', () => {
     );
     const state = useFolderStore.getState();
     expect(state.folders.map((f) => f.name).sort()).toEqual(['로컬 보안', '클라우드']);
+  });
+
+  it('preserves parent-child folder metadata when syncing with the cloud', async () => {
+    const parentId = await useFolderStore.getState().createFolder({ name: '상위' });
+    const childId = await useFolderStore
+      .getState()
+      .createFolder({ name: '하위', parentId });
+
+    await useFolderStore.getState().syncUser(user);
+
+    expect(mocks.upsertCloudFolder).toHaveBeenCalledWith(
+      user,
+      expect.objectContaining({ id: childId, parentId }),
+    );
+    expect(useFolderStore.getState().folders.find((folder) => folder.id === childId)?.parentId).toBe(parentId);
   });
 
   it('uses Firestore for create/delete while signed in and hides cloud folders after sign-out', async () => {

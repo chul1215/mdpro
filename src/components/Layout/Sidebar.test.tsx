@@ -30,7 +30,7 @@ type MockState = {
 };
 
 type MockFolderState = {
-  folders: Array<{ id: string; name: string; locked: boolean }>;
+  folders: Array<{ id: string; name: string; locked: boolean; parentId?: string | null }>;
   selectedFolderId: string | null;
   unlockedFolderIds: string[];
   createFolder: typeof createFolder;
@@ -211,6 +211,31 @@ describe('Sidebar', () => {
     expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '전체 문서' }));
     expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '업무' }));
     expect(fullHeightList).toContainElement(listQueries.getByRole('button', { name: '새 문서' }));
+  });
+
+  it('renders child folders nested under their parent folder', () => {
+    setFolders([
+      { id: 'parent', name: '상위', locked: false, parentId: null },
+      { id: 'child', name: '하위', locked: false, parentId: 'parent' },
+    ]);
+
+    render(<Sidebar />);
+
+    const parent = screen.getByRole('button', { name: '상위' });
+    const child = screen.getByRole('button', { name: '하위' });
+    expect(parent.compareDocumentPosition(child) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(child).toHaveClass('pl-6');
+  });
+
+  it('creates a child folder inside the selected folder', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('하위');
+    setFolders([{ id: 'parent', name: '상위', locked: false }], 'parent');
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: '폴더' }));
+
+    expect(createFolder).toHaveBeenCalledWith({ name: '하위', parentId: 'parent' });
   });
 
   it('keeps the fixed mobile sidebar above the app header and device safe area', () => {
