@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { BookUser, FilePlus, FileText, Folder, FolderPlus, Inbox, List, Lock, Shield, Trash2 } from 'lucide-react';
+import { BookUser, FilePlus, FileText, Folder, FolderPlus, Inbox, List, Lock, Pencil, Shield, Trash2 } from 'lucide-react';
 import { useUIStore, type SidebarTab } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
 import { useFolderStore } from '../../stores/folderStore';
@@ -246,6 +246,8 @@ export function Sidebar() {
   const folders = useFolderStore((s) => s.folders);
   const selectedFolderId = useFolderStore((s) => s.selectedFolderId);
   const createFolder = useFolderStore((s) => s.createFolder);
+  const renameFolder = useFolderStore((s) => s.renameFolder);
+  const moveFolder = useFolderStore((s) => s.moveFolder);
   const deleteFolder = useFolderStore((s) => s.deleteFolder);
   const setSelectedFolder = useFolderStore((s) => s.setSelectedFolder);
   const unlockFolder = useFolderStore((s) => s.unlockFolder);
@@ -256,6 +258,12 @@ export function Sidebar() {
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [folderDeleteTarget, setFolderDeleteTarget] = useState<FolderDeleteTarget | null>(null);
   const [passcodePrompt, setPasscodePrompt] = useState<PasscodePrompt | null>(null);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
+  const [dragItem, setDragItem] = useState<
+    | { type: 'document'; id: string }
+    | { type: 'folder'; id: string }
+    | null
+  >(null);
 
   const handleCreate = useCallback(async () => {
     const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
@@ -376,7 +384,44 @@ export function Sidebar() {
     const id = deleteTarget.id;
     setDeleteTarget(null);
     await removeDocument(id);
+    setSelectedDocumentIds((ids) => ids.filter((item) => item !== id));
   }, [deleteTarget, removeDocument]);
+
+  const toggleDocumentSelection = useCallback((id: string) => {
+    setSelectedDocumentIds((ids) => (
+      ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]
+    ));
+  }, []);
+
+  const moveDocumentsTogether = useCallback(
+    async (id: string, folderId: string | null) => {
+      const ids = selectedDocumentIds.includes(id) ? selectedDocumentIds : [id];
+      await Promise.all(ids.map((docId) => moveDocument(docId, folderId)));
+    },
+    [moveDocument, selectedDocumentIds],
+  );
+
+  const handleRenameFolder = useCallback(
+    (folder: { id: string; name: string }) => {
+      const name = window.prompt('폴더 이름을 입력하세요.', folder.name);
+      if (!name) return;
+      renameFolder(folder.id, name);
+    },
+    [renameFolder],
+  );
+
+  const handleDropOnFolder = useCallback(
+    async (folderId: string | null) => {
+      if (!dragItem) return;
+      if (dragItem.type === 'document') {
+        await moveDocumentsTogether(dragItem.id, folderId);
+      } else {
+        moveFolder(dragItem.id, folderId);
+      }
+      setDragItem(null);
+    },
+    [dragItem, moveDocumentsTogether, moveFolder],
+  );
 
   const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
   const orderedFolders = orderFoldersForTree(folders);
@@ -505,6 +550,11 @@ export function Sidebar() {
                   <button
                     type="button"
                     onClick={() => handleSelectFolder(null)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      void handleDropOnFolder(null);
+                    }}
                     aria-current={selectedFolderId === null ? 'true' : undefined}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] ${
                       selectedFolderId === null
@@ -520,10 +570,23 @@ export function Sidebar() {
                     const depth = getFolderDepth(folder, folders);
                     const indentClass = depth > 0 ? 'pl-6' : 'pl-2';
                     return (
-                      <div key={folder.id} className="group flex items-center gap-1">
+                      <div
+                        key={folder.id}
+                        className="group flex items-center gap-1"
+                        data-testid={`folder-row-${folder.id}`}
+                        draggable
+                        onDragStart={() => setDragItem({ type: 'folder', id: folder.id })}
+                        onDragEnd={() => setDragItem(null)}
+                      >
                         <button
                           type="button"
                           onClick={() => handleSelectFolder(folder.id)}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            void handleDropOnFolder(folder.id);
+                          }}
                           aria-label={locked ? `${folder.name} 잠김` : folder.name}
                           aria-current={selectedFolderId === folder.id ? 'true' : undefined}
                           className={`inline-flex min-w-0 flex-1 items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-[12px] ${indentClass} ${
@@ -534,6 +597,17 @@ export function Sidebar() {
                         >
                           {locked ? <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <Folder className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
                           <span className="truncate">{folder.name}</span>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`${folder.name} 폴더 이름 변경`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleRenameFolder({ id: folder.id, name: folder.name });
+                          }}
+                          className="rounded-md p-1 text-apple-ink/50 opacity-80 transition-colors hover:bg-black/10 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-blue-400 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                        >
+                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                         <button
                           type="button"
@@ -565,11 +639,25 @@ export function Sidebar() {
                       const active = doc.id === activeId;
                       const displayTitle = doc.title.trim() || '제목 없음';
                       const itemClass = active
-                        ? 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-14 text-left text-[13px] bg-blue-500 text-white'
-                        : 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pr-14 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
+                        ? 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pl-8 pr-14 text-left text-[13px] bg-blue-500 text-white'
+                        : 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pl-8 pr-14 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
                       return (
                         <li key={doc.id}>
-                          <div className="group relative h-9" data-testid={`document-row-${doc.id}`}>
+                          <div
+                            className="group relative h-9"
+                            data-testid={`document-row-${doc.id}`}
+                            draggable
+                            onDragStart={() => setDragItem({ type: 'document', id: doc.id })}
+                            onDragEnd={() => setDragItem(null)}
+                          >
+                            <input
+                              type="checkbox"
+                              aria-label={`${displayTitle} 선택`}
+                              checked={selectedDocumentIds.includes(doc.id)}
+                              onClick={(event) => event.stopPropagation()}
+                              onChange={() => toggleDocumentSelection(doc.id)}
+                              className="absolute left-1 top-1/2 z-10 h-4 w-4 -translate-y-1/2 rounded border-apple-border text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            />
                             <button
                               type="button"
                               aria-label={displayTitle}
@@ -603,7 +691,7 @@ export function Sidebar() {
                               value={doc.folderId ?? ''}
                               onClick={(event) => event.stopPropagation()}
                               onChange={(event) => {
-                                void moveDocument(doc.id, event.target.value || null);
+                                void moveDocumentsTogether(doc.id, event.target.value || null);
                               }}
                               className={
                                 'absolute right-7 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md border px-0 text-[10px] text-transparent transition-opacity focus:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus:text-white ' +

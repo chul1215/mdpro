@@ -61,6 +61,34 @@ function isFolderChainAccessible(
   return true;
 }
 
+function isDescendantFolder(
+  folders: FolderRecord[],
+  folderId: string,
+  possibleDescendantId: string | null | undefined,
+): boolean {
+  let currentId = possibleDescendantId ?? null;
+  const seen = new Set<string>();
+  while (currentId) {
+    if (currentId === folderId) return true;
+    if (seen.has(currentId)) return false;
+    seen.add(currentId);
+    currentId = folders.find((folder) => folder.id === currentId)?.parentId ?? null;
+  }
+  return false;
+}
+
+function normalizeParentId(
+  folders: FolderRecord[],
+  folderId: string,
+  parentId: string | null,
+): string | null {
+  if (!parentId) return null;
+  if (parentId === folderId) return null;
+  if (!folders.some((folder) => folder.id === parentId)) return null;
+  if (isDescendantFolder(folders, folderId, parentId)) return null;
+  return parentId;
+}
+
 type FolderState = {
   folders: FolderRecord[];
   selectedFolderId: string | null;
@@ -69,6 +97,8 @@ type FolderState = {
 
   syncUser: (user: AppUser | null) => Promise<void>;
   createFolder: (input: CreateFolderInput) => Promise<string>;
+  renameFolder: (id: string, name: string) => void;
+  moveFolder: (id: string, parentId: string | null) => void;
   deleteFolder: (id: string) => void;
   setSelectedFolder: (id: string | null) => void;
   unlockFolder: (id: string, passcode: string) => Promise<boolean>;
@@ -159,6 +189,36 @@ export const useFolderStore = create<FolderState>()(
             : [...new Set([...state.unlockedFolderIds, id])],
         }));
         return id;
+      },
+
+      renameFolder: (id, name) => {
+        const trimmed = name.trim() || '새 폴더';
+        let updatedFolder: FolderRecord | undefined;
+        set((state) => {
+          const folders = state.folders.map((folder) => {
+            if (folder.id !== id) return folder;
+            updatedFolder = { ...folder, name: trimmed };
+            return updatedFolder;
+          });
+          return { folders };
+        });
+        if (get().cloudUser && updatedFolder) void upsertCloudFolder(get().cloudUser, updatedFolder);
+      },
+
+      moveFolder: (id, parentId) => {
+        let updatedFolder: FolderRecord | undefined;
+        set((state) => {
+          const normalizedParentId = normalizeParentId(state.folders, id, parentId);
+          const folders = state.folders.map((folder) => {
+            if (folder.id !== id) return folder;
+            updatedFolder = normalizedParentId
+              ? { ...folder, parentId: normalizedParentId }
+              : { ...folder, parentId: undefined };
+            return updatedFolder;
+          });
+          return { folders };
+        });
+        if (get().cloudUser && updatedFolder) void upsertCloudFolder(get().cloudUser, updatedFolder);
       },
 
       deleteFolder: (id) => {

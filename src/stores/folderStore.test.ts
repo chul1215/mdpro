@@ -135,6 +135,26 @@ describe('folderStore', () => {
     expect(state.folders.find((folder) => folder.id === childId)?.parentId).toBe(grandParentId);
   });
 
+  it('renames a folder', async () => {
+    const id = await useFolderStore.getState().createFolder({ name: '기존' });
+
+    useFolderStore.getState().renameFolder(id, '변경됨');
+
+    expect(useFolderStore.getState().folders.find((folder) => folder.id === id)?.name).toBe('변경됨');
+  });
+
+  it('moves a folder under another folder and prevents cyclic moves', async () => {
+    const parentId = await useFolderStore.getState().createFolder({ name: '상위' });
+    const childId = await useFolderStore.getState().createFolder({ name: '하위', parentId });
+    const targetId = await useFolderStore.getState().createFolder({ name: '대상' });
+
+    useFolderStore.getState().moveFolder(childId, targetId);
+    expect(useFolderStore.getState().folders.find((folder) => folder.id === childId)?.parentId).toBe(targetId);
+
+    useFolderStore.getState().moveFolder(targetId, childId);
+    expect(useFolderStore.getState().folders.find((folder) => folder.id === targetId)?.parentId).toBeUndefined();
+  });
+
   it('deletes a locked folder and removes its transient unlock state', async () => {
     const id = await useFolderStore
       .getState()
