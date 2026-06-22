@@ -483,6 +483,28 @@ describe('Sidebar', () => {
     expect(moveDocument).toHaveBeenCalledWith('b', 'folder-a');
   });
 
+  it('deletes selected documents in one batch after confirmation', async () => {
+    const now = Date.now();
+    setDocs([
+      { id: 'a', title: 'Alpha', updatedAt: now },
+      { id: 'b', title: 'Beta', updatedAt: now },
+      { id: 'c', title: 'Gamma', updatedAt: now },
+    ]);
+    const user = userEvent.setup();
+
+    render(<Sidebar />);
+    await user.click(screen.getByLabelText('Alpha 선택'));
+    await user.click(screen.getByLabelText('Beta 선택'));
+    await user.click(screen.getByRole('button', { name: '선택 문서 2개 삭제' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '삭제' }));
+
+    expect(removeDocument).toHaveBeenCalledWith('a');
+    expect(removeDocument).toHaveBeenCalledWith('b');
+    expect(removeDocument).not.toHaveBeenCalledWith('c');
+  });
+
   it('moves documents and folders by drag and drop', () => {
     const now = Date.now();
     setFolders([

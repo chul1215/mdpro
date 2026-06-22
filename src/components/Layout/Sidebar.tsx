@@ -256,6 +256,7 @@ export function Sidebar() {
   const hasPendingInbox = useShareStore((s) => s.inbox.some((share) => share.status === 'pending'));
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [folderDeleteTarget, setFolderDeleteTarget] = useState<FolderDeleteTarget | null>(null);
   const [passcodePrompt, setPasscodePrompt] = useState<PasscodePrompt | null>(null);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
@@ -386,6 +387,14 @@ export function Sidebar() {
     await removeDocument(id);
     setSelectedDocumentIds((ids) => ids.filter((item) => item !== id));
   }, [deleteTarget, removeDocument]);
+
+  const handleConfirmBulkDelete = useCallback(async () => {
+    if (selectedDocumentIds.length === 0) return;
+    const ids = [...selectedDocumentIds];
+    setBulkDeleteOpen(false);
+    setSelectedDocumentIds([]);
+    await Promise.all(ids.map((id) => removeDocument(id)));
+  }, [removeDocument, selectedDocumentIds]);
 
   const toggleDocumentSelection = useCallback((id: string) => {
     setSelectedDocumentIds((ids) => (
@@ -544,6 +553,17 @@ export function Sidebar() {
                     보안
                   </button>
                 </div>
+                {selectedDocumentIds.length > 0 ? (
+                  <button
+                    type="button"
+                    aria-label={`선택 문서 ${selectedDocumentIds.length}개 삭제`}
+                    onClick={() => setBulkDeleteOpen(true)}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] font-medium text-red-600 transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    선택 문서 {selectedDocumentIds.length}개 삭제
+                  </button>
+                ) : null}
               </div>
               <nav aria-label="폴더와 문서 목록" className="flex-1 overflow-y-auto px-2 pb-3">
                 <div className="flex flex-col gap-1 border-t border-apple-border pt-2 dark:border-white/10">
@@ -781,6 +801,15 @@ export function Sidebar() {
           destructive
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteTarget(null)}
+        />
+        <ConfirmDialog
+          open={bulkDeleteOpen}
+          title="선택 문서 삭제"
+          message={`선택한 문서 ${selectedDocumentIds.length}개를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+          confirmLabel="삭제"
+          destructive
+          onConfirm={handleConfirmBulkDelete}
+          onCancel={() => setBulkDeleteOpen(false)}
         />
         <PasscodeDialog
           prompt={passcodePrompt}
