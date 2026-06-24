@@ -43,6 +43,14 @@ describe('TopBar', () => {
     expect(screen.queryByText('SMC AI실무도입전환 프로젝트')).not.toBeInTheDocument();
   });
 
+  it('shows the Roomi mascot next to the product title', () => {
+    render(<TopBar />);
+
+    const mascot = screen.getByRole('img', { name: 'Roomi 마스코트' });
+    expect(mascot).toHaveAttribute('src', '/roomi-character.webp');
+    expect(mascot).toHaveClass('rounded-full');
+  });
+
   it('renders view mode radio group with three options', () => {
     render(<TopBar />);
     const group = screen.getByRole('radiogroup', { name: '뷰 모드' });

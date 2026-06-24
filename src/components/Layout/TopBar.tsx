@@ -65,6 +65,13 @@ export function TopBar() {
         >
           <PanelLeft className="h-4 w-4" />
         </button>
+        <img
+          src="/roomi-character.webp"
+          alt="Roomi 마스코트"
+          className="h-10 w-10 rounded-full bg-white/90 object-cover object-top ring-1 ring-white/30 sm:h-8 sm:w-8"
+          loading="eager"
+          decoding="async"
+        />
         <div className="hidden md:flex md:flex-col md:leading-tight">
           <h1 className="font-display text-[15px] font-semibold tracking-tight text-white">
             mdONE
