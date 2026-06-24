@@ -28,7 +28,7 @@ test.describe('모바일 뷰포트 스모크 (375x812)', () => {
 
   test('앱 로드 및 핵심 UI 접근 가능', async ({ page }) => {
     await page.goto('/');
-    // 모바일에서 MD Practice 로고는 md 미만 뷰포트에서 숨김(hidden md:flex). 다른 앵커로 확인.
+    // 모바일에서 mdONE 로고는 md 미만 뷰포트에서 숨김(hidden md:flex). 다른 앵커로 확인.
     await expect(page.getByRole('banner')).toBeVisible();
 
     // 뷰모드 radio는 모바일에서도 노출
@@ -109,7 +109,7 @@ test.describe('태블릿 뷰포트 스모크', () => {
 
   test('md 분기 경계에서 레이아웃 정상', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'MD Practice' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'mdONE' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: '문서 목록' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: '문서 제목' })).toBeVisible();
   });

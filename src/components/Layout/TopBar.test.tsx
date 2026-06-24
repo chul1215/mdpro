@@ -36,6 +36,13 @@ describe('TopBar', () => {
     mockDoc = { title: '', content: '', setTitle, createDocument, switchTo };
   });
 
+  it('renders the product title as mdONE', () => {
+    render(<TopBar />);
+
+    expect(screen.getByRole('heading', { name: 'mdONE' })).toBeInTheDocument();
+    expect(screen.queryByText('SMC AI실무도입전환 프로젝트')).not.toBeInTheDocument();
+  });
+
   it('renders view mode radio group with three options', () => {
     render(<TopBar />);
     const group = screen.getByRole('radiogroup', { name: '뷰 모드' });

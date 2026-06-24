@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 test.describe('접근성 감사', () => {
   test('앱 초기 상태 WCAG AA 위반 없음', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'MD Practice' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'mdONE' })).toBeVisible();
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

@@ -17,7 +17,7 @@ test.describe('문서 왕복 시나리오', () => {
 
   test('새 문서 → 편집 → 제목 자동 추출 → 전환 → 삭제', async ({ page }) => {
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'MD Practice' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'mdONE' })).toBeVisible();
 
     // 초기 활성 문서의 제목 input
     const titleInput = page.getByRole('textbox', { name: '문서 제목' });

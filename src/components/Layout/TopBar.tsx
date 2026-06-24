@@ -67,11 +67,8 @@ export function TopBar() {
         </button>
         <div className="hidden md:flex md:flex-col md:leading-tight">
           <h1 className="font-display text-[15px] font-semibold tracking-tight text-white">
-            MD Practice
+            mdONE
           </h1>
-          <span className="text-[10px] font-medium tracking-tight text-white/70">
-            SMC AI실무도입전환 프로젝트
-          </span>
         </div>
       </div>
 
