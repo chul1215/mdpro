@@ -1,0 +1,18 @@
+[package]
+name = "md-practice"
+version = "0.1.0"
+description = "MD Practice desktop shell"
+authors = ["권철"]
+edition = "2021"
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+default = []

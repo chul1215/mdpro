@@ -13,7 +13,9 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build"
   },
   "dependencies": {
     "@codemirror/commands": "^6.8.0",
@@ -47,6 +49,7 @@
     "@firebase/rules-unit-testing": "^5.0.1",
     "@playwright/test": "^1.49.1",
     "@tailwindcss/typography": "^0.5.15",
+    "@tauri-apps/cli": "^2.9.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",

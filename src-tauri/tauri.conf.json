@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MD Practice",
+  "version": "0.1.0",
+  "identifier": "com.chul1215.mdpractice",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "MD Practice",
+        "width": 1280,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 640,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "category": "Productivity",
+    "shortDescription": "Markdown editor for SMC AI practical adoption workflows.",
+    "longDescription": "MD Practice is a local-first markdown editor with preview, folders, secure folders, and Google-account sharing.",
+    "macOS": {
+      "minimumSystemVersion": "12.0"
+    }
+  }
+}
