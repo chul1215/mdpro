@@ -16,7 +16,15 @@ const loadMarkdownModule = (): Promise<MarkdownModule> => {
   return markdownModulePromise;
 };
 
-export function PreviewPane() {
+type PreviewPaneProps = {
+  onScrollContainerReady?: (element: HTMLElement | null) => void;
+  onScroll?: (element: HTMLElement) => void;
+};
+
+export function PreviewPane({
+  onScrollContainerReady,
+  onScroll,
+}: PreviewPaneProps) {
   const content = useDocumentStore((s) => s.content);
   const theme = useUIStore((s) => s.theme);
   const [html, setHtml] = useState<string>('');
@@ -72,9 +80,12 @@ export function PreviewPane() {
         프리뷰
       </div>
       <div
+        ref={onScrollContainerReady}
+        data-testid="preview-scroll"
         className="min-h-0 flex-1 overflow-auto"
         aria-live="polite"
         aria-busy={false}
+        onScroll={(event) => onScroll?.(event.currentTarget)}
       >
         {error ? (
           <div

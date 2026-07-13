@@ -75,7 +75,12 @@ function buildExtensions(
   return extensions;
 }
 
-export function Editor() {
+type EditorProps = {
+  onScrollContainerReady?: (element: HTMLElement | null) => void;
+  onScroll?: (element: HTMLElement) => void;
+};
+
+export function Editor({ onScrollContainerReady, onScroll }: EditorProps = {}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const themeCompartmentRef = useRef(new Compartment());
@@ -100,6 +105,10 @@ export function Editor() {
     const view = new EditorView({ state, parent: hostRef.current });
     viewRef.current = view;
     useEditorStore.getState().setView(view);
+    const scrollElement = view.scrollDOM;
+    const handleScroll = () => onScroll?.(scrollElement);
+    scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+    onScrollContainerReady?.(scrollElement);
 
     const unsub = useDocumentStore.subscribe((state, prev) => {
       // 문서 전환: undo 히스토리가 이전 문서와 섞이지 않도록 setState로 상태를 완전히 교체한다.
@@ -131,11 +140,13 @@ export function Editor() {
 
     return () => {
       unsub();
+      scrollElement.removeEventListener('scroll', handleScroll);
+      onScrollContainerReady?.(null);
       useEditorStore.getState().setView(null);
       view.destroy();
       viewRef.current = null;
     };
-  }, []);
+  }, [onScroll, onScrollContainerReady]);
 
   useEffect(() => {
     const view = viewRef.current;

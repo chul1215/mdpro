@@ -1,6 +1,11 @@
 import { Editor } from '../Editor/Editor';
 
-export function EditorPane() {
+type EditorPaneProps = {
+  onScrollContainerReady?: (element: HTMLElement | null) => void;
+  onScroll?: (element: HTMLElement) => void;
+};
+
+export function EditorPane({ onScrollContainerReady, onScroll }: EditorPaneProps) {
   return (
     <section
       aria-label="에디터"
@@ -10,7 +15,10 @@ export function EditorPane() {
         <span>에디터</span>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden">
-        <Editor />
+        <Editor
+          onScrollContainerReady={onScrollContainerReady}
+          onScroll={onScroll}
+        />
       </div>
     </section>
   );

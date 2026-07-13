@@ -4,7 +4,12 @@ import { getInitialViewMode, useUIStore } from './uiStore';
 describe('uiStore', () => {
   beforeEach(() => {
     localStorage.clear();
-    useUIStore.setState({ theme: 'light', viewMode: 'split', sidebarOpen: true });
+    useUIStore.setState({
+      theme: 'light',
+      viewMode: 'split',
+      sidebarOpen: true,
+      splitRatio: 50,
+    });
   });
 
   it('toggles theme between light and dark', () => {
@@ -37,5 +42,19 @@ describe('uiStore', () => {
   it('defaults to edit-only view on mobile-width screens', () => {
     expect(getInitialViewMode(true)).toBe('edit');
     expect(getInitialViewMode(false)).toBe('split');
+  });
+
+  it('stores a clamped split ratio for the editor and preview panes', () => {
+    useUIStore.getState().setSplitRatio(65);
+    expect(useUIStore.getState().splitRatio).toBe(65);
+
+    useUIStore.getState().setSplitRatio(10);
+    expect(useUIStore.getState().splitRatio).toBe(25);
+
+    useUIStore.getState().setSplitRatio(90);
+    expect(useUIStore.getState().splitRatio).toBe(75);
+
+    const persisted = JSON.parse(localStorage.getItem('mdpro-ui') ?? '{}');
+    expect(persisted.state.splitRatio).toBe(75);
   });
 });

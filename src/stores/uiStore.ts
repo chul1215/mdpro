@@ -11,6 +11,7 @@ type UIState = {
   sidebarOpen: boolean;
   focusMode: boolean;
   sidebarTab: SidebarTab;
+  splitRatio: number;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   setViewMode: (mode: ViewMode) => void;
@@ -19,6 +20,7 @@ type UIState = {
   setFocusMode: (enabled: boolean) => void;
   toggleFocusMode: () => void;
   setSidebarTab: (tab: SidebarTab) => void;
+  setSplitRatio: (ratio: number) => void;
 };
 
 const prefersDark = () =>
@@ -42,6 +44,7 @@ export const useUIStore = create<UIState>()(
       sidebarOpen: !prefersMobile(),
       focusMode: false,
       sidebarTab: 'documents',
+      splitRatio: 50,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
@@ -52,6 +55,8 @@ export const useUIStore = create<UIState>()(
       toggleFocusMode: () =>
         set((state) => ({ focusMode: !state.focusMode })),
       setSidebarTab: (sidebarTab) => set({ sidebarTab }),
+      setSplitRatio: (splitRatio) =>
+        set({ splitRatio: Math.min(75, Math.max(25, Math.round(splitRatio))) }),
     }),
     {
       name: 'mdpro-ui',
@@ -62,6 +67,7 @@ export const useUIStore = create<UIState>()(
         sidebarOpen: state.sidebarOpen,
         focusMode: state.focusMode,
         sidebarTab: state.sidebarTab,
+        splitRatio: state.splitRatio,
       }),
     },
   ),
