@@ -16,7 +16,7 @@ export function getMermaidThemeConfig(theme: Theme): Record<string, unknown> {
     return {
       theme: 'base',
       themeVariables: {
-        fontFamily: 'Galmuri11, Noto Sans KR, monospace',
+        fontFamily: 'Gulim, 굴림, Noto Sans KR, Arial, sans-serif',
         background: '#9bbc0f',
         primaryColor: '#9bbc0f',
         primaryTextColor: '#0f380f',

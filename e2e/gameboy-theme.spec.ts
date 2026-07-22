@@ -9,27 +9,30 @@ async function enableGameBoyTheme(page: import('@playwright/test').Page) {
 }
 
 test.describe('Game Boy 테마', () => {
-  test('LCD 팔레트와 한글 픽셀 폰트를 적용하고 새로고침 후 유지한다', async ({ page }) => {
+  test('LCD 팔레트와 굴림 본문 폰트를 적용하고 새로고침 후 유지한다', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'mdONE' })).toBeVisible();
     await enableGameBoyTheme(page);
 
     const renderedTheme = await page.evaluate(async () => {
-      await document.fonts.load('16px Galmuri11', '한글 English 123');
       const body = getComputedStyle(document.body);
       const header = getComputedStyle(document.querySelector('header')!);
       const editor = getComputedStyle(document.querySelector('.cm-editor')!);
+      const editorScroller = getComputedStyle(document.querySelector('.cm-scroller')!);
+      const preview = getComputedStyle(document.querySelector('.prose')!);
       return {
-        fontLoaded: document.fonts.check('16px Galmuri11', '한글 English 123'),
         bodyFont: body.fontFamily,
+        editorFont: editorScroller.fontFamily,
+        previewFont: preview.fontFamily,
         bodyBackground: body.backgroundColor,
         headerBackground: header.backgroundColor,
         editorBackground: editor.backgroundColor,
       };
     });
 
-    expect(renderedTheme.fontLoaded).toBe(true);
-    expect(renderedTheme.bodyFont).toContain('Galmuri11');
+    expect(renderedTheme.bodyFont).toContain('Gulim');
+    expect(renderedTheme.editorFont).toContain('Gulim');
+    expect(renderedTheme.previewFont).toContain('Gulim');
     expect(renderedTheme.bodyBackground).toBe('rgb(139, 172, 15)');
     expect(renderedTheme.headerBackground).toBe('rgb(15, 56, 15)');
     expect(renderedTheme.editorBackground).toBe('rgb(155, 188, 15)');

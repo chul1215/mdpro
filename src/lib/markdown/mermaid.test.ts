@@ -7,7 +7,7 @@ describe('getMermaidThemeConfig', () => {
 
     expect(config.theme).toBe('base');
     expect(config.themeVariables).toMatchObject({
-      fontFamily: 'Galmuri11, Noto Sans KR, monospace',
+      fontFamily: 'Gulim, 굴림, Noto Sans KR, Arial, sans-serif',
       background: '#9bbc0f',
       primaryTextColor: '#0f380f',
       primaryBorderColor: '#306230',

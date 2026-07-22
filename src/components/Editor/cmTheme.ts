@@ -160,7 +160,7 @@ export const gameBoyTheme = EditorView.theme(
       height: '100%',
     },
     '.cm-scroller': {
-      fontFamily: '"Galmuri11", "Noto Sans KR", monospace',
+      fontFamily: 'Gulim, "굴림", "Noto Sans KR", Arial, sans-serif',
       fontSize: '14px',
       lineHeight: '1.8',
     },

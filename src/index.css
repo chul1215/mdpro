@@ -148,17 +148,18 @@ html.gameboy {
   --gb-shadow: #306230;
   --gb-mid: #8bac0f;
   --gb-screen: #9bbc0f;
+  --gb-reading-font: Gulim, '굴림', 'Noto Sans KR', Arial, sans-serif;
 }
 
 html.gameboy body {
   background-color: #8bac0f;
   color: #0f380f;
+  font-family: var(--gb-reading-font);
   letter-spacing: 0;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html.gameboy body,
 html.gameboy button,
 html.gameboy input,
 html.gameboy select,
@@ -383,7 +384,8 @@ html.gameboy img[alt='Roomi 마스코트'] {
 }
 
 html.gameboy .prose,
-html.gameboy .prose :where(p, li, h1, h2, h3, h4, h5, h6, strong, em) {
+html.gameboy .prose * {
+  font-family: var(--gb-reading-font) !important;
   color: #0f380f !important;
 }
 
