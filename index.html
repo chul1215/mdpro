@@ -3,6 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      (() => {
+        try {
+          const parsed = JSON.parse(localStorage.getItem('mdpro-ui') || 'null');
+          const theme = parsed && parsed.state && parsed.state.theme;
+          if (theme === 'light' || theme === 'dark' || theme === 'gameboy') {
+            document.documentElement.dataset.theme = theme;
+            if (theme !== 'light') document.documentElement.classList.add(theme);
+          }
+        } catch {
+          // 손상된 저장값은 앱 store의 안전한 기본값으로 복구한다.
+        }
+      })();
+    </script>
     <title>mdONE</title>
   </head>
   <body>

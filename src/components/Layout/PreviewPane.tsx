@@ -57,6 +57,9 @@ export function PreviewPane({
   useEffect(() => {
     if (!containerRef.current) return;
     const container = containerRef.current;
+    // React는 동일한 html 문자열이면 이미 SVG로 치환된 DOM을 복구하지 않는다.
+    // 테마별 Mermaid initialize 전에 원본 markdown HTML을 항상 재주입한다.
+    container.innerHTML = html;
     const controller = new AbortController();
     loadMarkdownModule()
       .then(({ containsMermaid, renderMermaidBlocks }) => {

@@ -473,7 +473,7 @@ export function Sidebar() {
         type="button"
         aria-label="사이드바 닫기"
         onClick={() => setSidebarOpen(false)}
-        className="absolute inset-0 z-20 bg-black/40 backdrop-blur-sm md:hidden"
+        className="absolute inset-x-0 bottom-0 top-[var(--mobile-chrome-height)] z-20 bg-black/40 backdrop-blur-sm md:hidden"
       />
       <aside
         role="navigation"
@@ -486,7 +486,7 @@ export function Sidebar() {
                 ? '받은 문서함'
                 : '주소록'
         }
-        className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,calc(100vw-2rem))] flex-col bg-apple-bg pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-apple md:static md:h-full md:w-56 md:shrink-0 md:pb-0 md:pt-0 md:shadow-none dark:bg-surface-5"
+        className="fixed bottom-0 left-0 top-[var(--mobile-chrome-height)] z-50 flex w-[min(18rem,calc(100vw-2rem))] flex-col bg-apple-bg pb-[env(safe-area-inset-bottom)] shadow-apple md:static md:h-full md:w-56 md:shrink-0 md:pb-0 md:shadow-none dark:bg-surface-5"
       >
         {/* 탭 네비게이션 */}
         <div
@@ -502,9 +502,9 @@ export function Sidebar() {
               aria-selected={sidebarTab === tab}
               aria-controls={`${tab}-panel`}
               role="tab"
-              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-[12px] font-medium transition-colors relative ${
+              className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1 px-1 py-2 text-[12px] font-medium transition-colors relative ${
                 sidebarTab === tab
-                  ? 'text-blue-500 border-b-2 border-blue-500'
+                  ? 'border-b-2 border-[#005eb8] text-[#005eb8] dark:border-[#6eb4ff] dark:text-[#6eb4ff]'
                   : 'text-apple-ink/70 hover:text-apple-ink dark:text-white/70 dark:hover:text-white'
               }`}
             >
@@ -718,10 +718,10 @@ export function Sidebar() {
                                 void moveDocumentsTogether(doc.id, event.target.value || null);
                               }}
                               className={
-                                'absolute right-7 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md border px-0 text-[10px] text-transparent transition-opacity focus:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus:text-white ' +
+                                'absolute right-7 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md border px-0 text-[10px] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
                                 (active
-                                  ? 'border-white/40 bg-white/15 opacity-90'
-                                  : 'border-apple-border bg-white opacity-70 hover:opacity-100 dark:border-white/10 dark:bg-surface-4 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100')
+                                  ? 'border-white/60 bg-[#005eb8] text-white opacity-100'
+                                  : 'border-apple-border bg-white text-apple-ink opacity-70 hover:opacity-100 dark:border-white/10 dark:bg-surface-4 dark:text-white md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100')
                               }
                             >
                               <option className="text-apple-ink" value="">전체 문서</option>

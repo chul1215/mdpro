@@ -291,13 +291,13 @@ describe('Sidebar', () => {
     expect(setSelectedFolder).toHaveBeenCalledWith('child');
   });
 
-  it('keeps the fixed mobile sidebar above the app header and device safe area', () => {
+  it('starts the fixed mobile sidebar below the measured app chrome', () => {
     render(<Sidebar />);
 
     const sidebar = screen.getByRole('navigation', { name: '문서 목록' });
-    expect(sidebar).toHaveClass('pt-[env(safe-area-inset-top)]');
-    expect(sidebar).toHaveClass('md:pt-0');
-    // TopBar uses z-40; the mobile sidebar must stack above it or the top controls are covered.
+    expect(sidebar).toHaveClass('top-[var(--mobile-chrome-height)]');
+    expect(sidebar).toHaveClass('bottom-0');
+    expect(sidebar).toHaveClass('pb-[env(safe-area-inset-bottom)]');
     expect(sidebar).toHaveClass('z-50');
   });
 
@@ -455,7 +455,8 @@ describe('Sidebar', () => {
     const folderSelect = screen.getByLabelText('Alpha 폴더 이동');
     expect(folderSelect).toHaveClass('absolute');
     expect(folderSelect).toHaveClass('w-7');
-    expect(folderSelect).toHaveClass('text-transparent');
+    expect(folderSelect).toHaveClass('text-white');
+    expect(folderSelect).not.toHaveClass('text-transparent');
     expect(folderSelect).not.toHaveClass('mt-1');
     expect(folderSelect).not.toHaveClass('w-full');
     expect(folderSelect).not.toHaveClass('w-16');

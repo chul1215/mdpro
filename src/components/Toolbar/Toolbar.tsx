@@ -204,6 +204,7 @@ export function Toolbar() {
                 <button
                   type="button"
                   aria-label={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
+                  aria-pressed={focusMode}
                   title={focusMode ? '포커스 모드 끄기' : '포커스 모드 켜기'}
                   onClick={() => useUIStore.getState().toggleFocusMode()}
                   className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8 ${

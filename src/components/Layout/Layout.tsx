@@ -1,7 +1,10 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
+  useState,
+  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
@@ -28,6 +31,19 @@ export function Layout() {
   const ignoredScrollTargetRef = useRef<HTMLElement | null>(null);
   const draggingRef = useRef(false);
   const previousBodyStyleRef = useRef({ cursor: '', userSelect: '' });
+  const chromeRef = useRef<HTMLDivElement>(null);
+  const [mobileChromeHeight, setMobileChromeHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const chrome = chromeRef.current;
+    if (!chrome) return;
+    const updateHeight = () => setMobileChromeHeight(chrome.getBoundingClientRect().height);
+    updateHeight();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(chrome);
+    return () => observer.disconnect();
+  }, []);
 
   const synchronizeScroll = useCallback((source: HTMLElement, target: HTMLElement | null) => {
     if (!target) return;
@@ -111,11 +127,16 @@ export function Layout() {
       : undefined;
 
   return (
-    <div className="relative flex h-dvh w-full flex-row overflow-hidden bg-apple-bg text-apple-ink dark:bg-black dark:text-white">
+    <div
+      className="relative flex h-dvh w-full flex-row overflow-hidden bg-apple-bg text-apple-ink dark:bg-black dark:text-white"
+      style={{ '--mobile-chrome-height': `${mobileChromeHeight}px` } as CSSProperties}
+    >
       {sidebarOpen && <Sidebar />}
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
-        <Toolbar />
+        <div ref={chromeRef} className="shrink-0">
+          <TopBar />
+          <Toolbar />
+        </div>
         <div className="relative flex min-h-0 flex-1 overflow-hidden">
           <main
             ref={splitContainerRef}

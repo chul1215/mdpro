@@ -41,7 +41,7 @@ test.describe('모바일 뷰포트 스모크 (375x812)', () => {
 
     // 사이드바 토글 — 모바일에서는 오버레이로 뜸
     await page.getByRole('button', { name: '사이드바 토글' }).click();
-    await expect(page.getByRole('navigation', { name: '문서 목록' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: '문서 목록', exact: true })).toBeVisible();
   });
 });
 
@@ -85,7 +85,7 @@ test.describe('좁은 화면 레이아웃 충돌 방지', () => {
 
     const banner = page.getByRole('banner');
     const toolbar = page.getByRole('toolbar', { name: '서식 도구' });
-    const sidebar = page.getByRole('navigation', { name: '문서 목록' });
+    const sidebar = page.getByRole('navigation', { name: '문서 목록', exact: true });
 
     await expect(sidebar).toBeHidden();
     await page.getByRole('button', { name: '사이드바 토글' }).click();
@@ -110,7 +110,7 @@ test.describe('태블릿 뷰포트 스모크', () => {
   test('md 분기 경계에서 레이아웃 정상', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'mdONE' })).toBeVisible();
-    await expect(page.getByRole('navigation', { name: '문서 목록' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: '문서 목록', exact: true })).toBeVisible();
     await expect(page.getByRole('textbox', { name: '문서 제목' })).toBeVisible();
   });
 });

@@ -9,7 +9,7 @@ type MermaidAPI = {
 };
 
 let mermaidPromise: Promise<MermaidAPI> | null = null;
-let currentTheme: Theme | null = null;
+let renderQueue: Promise<void> = Promise.resolve();
 
 export function getMermaidThemeConfig(theme: Theme): Record<string, unknown> {
   if (theme === 'gameboy') {
@@ -30,19 +30,17 @@ export function getMermaidThemeConfig(theme: Theme): Record<string, unknown> {
   return { theme: theme === 'dark' ? 'dark' : 'default' };
 }
 
-async function loadMermaid(theme: Theme): Promise<MermaidAPI> {
-  if (mermaidPromise && currentTheme === theme) return mermaidPromise;
-  currentTheme = theme;
-  mermaidPromise = import('mermaid').then((mod) => {
-    const mermaid = mod.default as MermaidAPI;
-    mermaid.initialize({
-      startOnLoad: false,
-      ...getMermaidThemeConfig(theme),
-      securityLevel: 'strict',
-    });
-    return mermaid;
-  });
+async function loadMermaid(): Promise<MermaidAPI> {
+  if (!mermaidPromise) {
+    mermaidPromise = import('mermaid').then((mod) => mod.default as MermaidAPI);
+  }
   return mermaidPromise;
+}
+
+function enqueueRender<T>(task: () => Promise<T>): Promise<T> {
+  const result = renderQueue.then(task, task);
+  renderQueue = result.then(() => undefined, () => undefined);
+  return result;
 }
 
 /**
@@ -63,11 +61,17 @@ export async function renderMermaidBlocks(
   );
   if (codeBlocks.length === 0) return;
 
-  const mermaid = await loadMermaid(theme);
-  if (signal?.aborted) return;
+  await enqueueRender(async () => {
+    if (signal?.aborted) return;
+    const mermaid = await loadMermaid();
+    if (signal?.aborted) return;
+    mermaid.initialize({
+      startOnLoad: false,
+      ...getMermaidThemeConfig(theme),
+      securityLevel: 'strict',
+    });
 
-  await Promise.all(
-    codeBlocks.map(async (code, index) => {
+    await Promise.all(codeBlocks.map(async (code, index) => {
       if (signal?.aborted) return;
       const source = code.textContent ?? '';
       const wrapper = code.parentElement?.tagName === 'PRE' ? code.parentElement : code;
@@ -94,6 +98,6 @@ export async function renderMermaidBlocks(
         fallback.appendChild(pre);
         wrapper.replaceWith(fallback);
       }
-    }),
-  );
+    }));
+  });
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getInitialViewMode, useUIStore } from './uiStore';
+import { getInitialViewMode, normalizeTheme, useUIStore } from './uiStore';
 
 describe('uiStore', () => {
   beforeEach(() => {
@@ -39,6 +39,22 @@ describe('uiStore', () => {
     useUIStore.getState().setTheme('gameboy');
     const persisted = JSON.parse(localStorage.getItem('mdpro-ui') ?? '{}');
     expect(persisted.state.theme).toBe('gameboy');
+    expect(persisted.version).toBe(1);
+  });
+
+  it.each(['system', 'neon', null, undefined])('normalizes invalid persisted theme %s', (theme) => {
+    expect(normalizeTheme(theme, 'dark')).toBe('dark');
+  });
+
+  it.each(['light', 'dark', 'gameboy'] as const)('keeps valid persisted theme %s', (theme) => {
+    expect(normalizeTheme(theme, 'light')).toBe(theme);
+  });
+
+  it('normalizes invalid theme during persist rehydration', async () => {
+    localStorage.setItem('mdpro-ui', JSON.stringify({ state: { theme: 'neon' }, version: 0 }));
+    await useUIStore.persist.rehydrate();
+    expect(useUIStore.getState().theme).toBe('light');
+    expect(() => useUIStore.getState().toggleTheme()).not.toThrow();
   });
 
   it('defaults to edit-only view on mobile-width screens', () => {

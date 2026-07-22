@@ -30,7 +30,24 @@ hr { border: 0; border-top: 1px solid #e2e8f0; margin: 2em 0; }
 ul, ol { padding-left: 2em; }
 `;
 
-export const exportStyles = `${BASE_STYLES}
+const THEME_STYLES = `
+html.dark body { background: #0d1117; color: #c9d1d9; }
+html.dark a { color: #58a6ff; }
+html.dark pre, html.dark code { background: #161b22; color: #c9d1d9; }
+html.dark blockquote { color: #8b949e; border-color: #30363d; }
+html.dark :where(h1, h2, table th, table td, hr) { border-color: #30363d; }
+html.dark table th { background: #161b22; }
+
+html.gameboy body { background: #9bbc0f; color: #0f380f; font-family: Gulim, "굴림", "Noto Sans KR", Arial, sans-serif; }
+html.gameboy :where(h1, h2, table th, table td, hr, blockquote) { border-color: #306230; }
+html.gameboy a { color: #0f380f; text-decoration-thickness: 2px; }
+html.gameboy code:not(pre code) { background: #0f380f; color: #9bbc0f; }
+html.gameboy pre, html.gameboy pre code, html.gameboy code.hljs { background: #0f380f; color: #9bbc0f; }
+html.gameboy .hljs-comment, html.gameboy .hljs-quote { color: #9bbc0f; }
+html.gameboy table th { background: #8bac0f; }
+`;
+
+export const exportStyles = `${BASE_STYLES}${THEME_STYLES}
 /* highlight.js — GitHub 테마 */
 ${hljsCSS}
 /* KaTeX */

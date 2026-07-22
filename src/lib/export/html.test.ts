@@ -81,6 +81,23 @@ describe('downloadHtml', () => {
     const after = document.querySelectorAll('body > div').length;
     expect(after).toBe(before);
   });
+
+  it('applies the Game Boy theme to the exported document body, not only Mermaid', async () => {
+    await downloadHtml({ title: 'LCD', content: '본문과 `코드`' }, { theme: 'gameboy' });
+    const html = await readBlobAsText(capture.blob!);
+
+    expect(html).toContain('<html lang="ko" class="gameboy" data-theme="gameboy">');
+    expect(html).toMatch(/html\.gameboy body\s*\{[^}]*background:\s*#9bbc0f[^}]*color:\s*#0f380f[^}]*font-family:\s*Gulim/s);
+    expect(html).toMatch(/html\.gameboy code:not\(pre code\)\s*\{[^}]*background:\s*#0f380f[^}]*color:\s*#9bbc0f/s);
+  });
+
+  it('marks dark exports and supplies a dark document surface', async () => {
+    await downloadHtml({ title: 'Dark', content: '본문' }, { theme: 'dark' });
+    const html = await readBlobAsText(capture.blob!);
+
+    expect(html).toContain('<html lang="ko" class="dark" data-theme="dark">');
+    expect(html).toMatch(/html\.dark body\s*\{[^}]*background:\s*#0d1117[^}]*color:/s);
+  });
 });
 
 describe('inlineImages', () => {

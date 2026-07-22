@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { EditorState, Compartment, type Extension } from '@codemirror/state';
-import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view';
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+} from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -32,6 +38,7 @@ function buildExtensions(
   const extensions: Extension[] = [
     lineNumbers(),
     highlightActiveLine(),
+    highlightActiveLineGutter(),
     history(),
     bracketMatching(),
     indentOnInput(),

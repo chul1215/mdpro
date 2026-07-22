@@ -274,10 +274,12 @@ html.gameboy aside[role='navigation'] {
 html.gameboy aside [role='tab'] {
   flex-direction: column;
   gap: 1px;
-  padding: 4px 2px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px 2px;
   border-color: transparent !important;
   color: #0f380f !important;
-  font-size: 9px;
+  font-size: 11px;
   white-space: nowrap;
 }
 
@@ -359,7 +361,12 @@ html.gameboy textarea {
 html.gameboy input::placeholder,
 html.gameboy textarea::placeholder {
   color: #0f380f !important;
-  opacity: 0.72;
+  opacity: 1;
+}
+
+html.gameboy header[role='banner'] input::placeholder {
+  color: #9bbc0f !important;
+  opacity: 1;
 }
 
 html.gameboy [role='menu'],
@@ -374,6 +381,12 @@ html.gameboy [role='dialog'] {
 html.gameboy [role='menu'] *,
 html.gameboy [role='dialog'] * {
   color: #0f380f !important;
+}
+
+html.gameboy [role='dialog'] button[data-dialog-action='primary'],
+html.gameboy [role='dialog'] button[data-dialog-action='destructive'] {
+  background-color: #0f380f !important;
+  color: #9bbc0f !important;
 }
 
 html.gameboy img[alt='Roomi 마스코트'] {
@@ -403,21 +416,37 @@ html.gameboy .prose :where(table, th, td, hr) {
   border-color: #306230 !important;
 }
 
-html.gameboy pre,
-html.gameboy code,
+html.gameboy .prose code:not(pre code),
 html.gameboy pre code.hljs,
 html.gameboy code.hljs {
-  background: #306230 !important;
+  background: #0f380f !important;
+  color: #9bbc0f !important;
+}
+
+html.gameboy .prose pre,
+html.gameboy .prose pre code {
+  background: #0f380f !important;
+  color: #9bbc0f !important;
+}
+
+/* highlight.js가 언어별 토큰에 주입하는 색이 LCD 배경과 겹치지 않도록
+   코드 블록의 모든 하위 토큰을 읽기 가능한 전경색으로 고정한다. */
+html.gameboy .prose pre code.hljs *,
+html.gameboy .prose pre code[class*='language-'] * {
   color: #9bbc0f !important;
 }
 
 html.gameboy .hljs-comment,
 html.gameboy .hljs-quote {
-  color: #8bac0f !important;
+  color: #9bbc0f !important;
 }
 
 html.gameboy .hljs-keyword,
-html.gameboy .hljs-title,
+html.gameboy .hljs-title {
+  color: #9bbc0f !important;
+  font-weight: 700;
+}
+
 html.gameboy .hljs-string,
 html.gameboy .hljs-number,
 html.gameboy .hljs-literal,
@@ -426,8 +455,14 @@ html.gameboy .hljs-built_in {
 }
 
 html.gameboy :focus-visible {
-  outline: 3px solid #0f380f;
+  outline: 3px solid #0f380f !important;
   outline-offset: 2px;
+  box-shadow: none !important;
+}
+
+html.gameboy header[role='banner'] :focus-visible,
+html.gameboy [role='toolbar'] :focus-visible {
+  outline-color: #9bbc0f !important;
 }
 
 html.gameboy ::selection {

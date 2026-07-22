@@ -5,6 +5,14 @@ export type Theme = 'light' | 'dark' | 'gameboy';
 export type ViewMode = 'edit' | 'split' | 'preview';
 export type SidebarTab = 'documents' | 'outline' | 'inbox' | 'addressBook';
 
+const THEMES: readonly Theme[] = ['light', 'dark', 'gameboy'];
+
+export function normalizeTheme(value: unknown, fallback: Theme = 'light'): Theme {
+  return typeof value === 'string' && THEMES.includes(value as Theme)
+    ? (value as Theme)
+    : fallback;
+}
+
 type UIState = {
   theme: Theme;
   viewMode: ViewMode;
@@ -45,7 +53,7 @@ export const useUIStore = create<UIState>()(
       focusMode: false,
       sidebarTab: 'documents',
       splitRatio: 50,
-      setTheme: (theme) => set({ theme }),
+      setTheme: (theme) => set({ theme: normalizeTheme(theme) }),
       toggleTheme: () =>
         set((state) => ({
           theme:
@@ -67,7 +75,17 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'mdpro-ui',
+      version: 1,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persistedState) => persistedState,
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState ?? {}) as Partial<UIState>;
+        return {
+          ...currentState,
+          ...persisted,
+          theme: normalizeTheme(persisted.theme, currentState.theme),
+        };
+      },
       partialize: (state) => ({
         theme: state.theme,
         viewMode: state.viewMode,

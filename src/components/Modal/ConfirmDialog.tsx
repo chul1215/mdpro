@@ -130,6 +130,7 @@ export function ConfirmDialog({
           </button>
           <button
             ref={confirmRef}
+            data-dialog-action={destructive ? 'destructive' : 'primary'}
             type="button"
             onClick={onConfirm}
             className={

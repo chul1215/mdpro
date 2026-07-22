@@ -84,10 +84,11 @@ export async function inlineImages(container: HTMLElement): Promise<void> {
   );
 }
 
-function buildDocument(title: string, body: string): string {
+function buildDocument(title: string, body: string, theme: Theme): string {
   const safeTitle = escapeHtml(title || FALLBACK_TITLE);
+  const themeAttribute = theme === 'light' ? ' data-theme="light"' : ` class="${theme}" data-theme="${theme}"`;
   return `<!doctype html>
-<html lang="ko">
+<html lang="ko"${themeAttribute}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -124,7 +125,7 @@ export async function downloadHtml(
     }
     await inlineImages(container);
     const finalBody = container.innerHTML;
-    const html = buildDocument(doc.title, finalBody);
+    const html = buildDocument(doc.title, finalBody, theme);
     const base = sanitizeFilename(doc.title || FALLBACK_TITLE);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     triggerDownload(blob, `${base}.html`);

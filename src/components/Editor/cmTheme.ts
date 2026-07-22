@@ -172,7 +172,7 @@ export const gameBoyTheme = EditorView.theme(
     },
     '.cm-activeLine': { backgroundColor: '#8bac0f' },
     '.cm-activeLineGutter': {
-      backgroundColor: '#306230',
+      backgroundColor: '#0f380f',
       color: '#9bbc0f',
     },
     '.cm-cursor': { borderLeftColor: '#0f380f', borderLeftWidth: '3px' },
