@@ -8,7 +8,7 @@ import { languages } from '@codemirror/language-data';
 import { useDocumentStore } from '../../stores/documentStore';
 import { useUIStore, type Theme } from '../../stores/uiStore';
 import { useEditorStore } from '../../stores/editorStore';
-import { lightTheme, darkTheme, focusModePlugin, type FocusModeConfig } from './cmTheme';
+import { focusModePlugin, getCodeMirrorTheme, type FocusModeConfig } from './cmTheme';
 import { toggleBold, toggleItalic } from '../../lib/editor/commands';
 
 function makeFocusConfig(enabled: boolean): FocusModeConfig {
@@ -56,7 +56,7 @@ function buildExtensions(
     markdown({ base: markdownLanguage, codeLanguages: languages }),
     EditorView.lineWrapping,
     EditorView.contentAttributes.of({ 'aria-label': '마크다운 편집기' }),
-    themeCompartment.of(theme === 'dark' ? darkTheme : lightTheme),
+    themeCompartment.of(getCodeMirrorTheme(theme)),
     focusCompartment.of(focusExtension(focusConfig)),
   ];
 
@@ -155,7 +155,7 @@ export function Editor({ onScrollContainerReady, onScroll }: EditorProps = {}) {
     view.dispatch({
       effects: [
         themeCompartmentRef.current.reconfigure(
-          theme === 'dark' ? darkTheme : lightTheme,
+          getCodeMirrorTheme(theme),
         ),
         focusCompartmentRef.current.reconfigure(focusExtension(focusConfig)),
       ],

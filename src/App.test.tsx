@@ -21,4 +21,13 @@ describe('App', () => {
     render(<App />);
     expect(document.documentElement).toHaveClass('dark');
   });
+
+  it('applies only the Game Boy root theme class when selected', () => {
+    useUIStore.setState({ theme: 'gameboy' });
+    render(<App />);
+
+    expect(document.documentElement).toHaveClass('gameboy');
+    expect(document.documentElement).not.toHaveClass('dark');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'gameboy');
+  });
 });

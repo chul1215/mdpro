@@ -9,6 +9,7 @@
 import { renderMarkdown, containsMermaid } from '../markdown/pipeline';
 import { renderMermaidBlocks } from '../markdown/mermaid';
 import { exportStyles } from './styles';
+import type { Theme } from '../../stores/uiStore';
 
 const FALLBACK_TITLE = '제목 없음';
 const MAX_FILENAME_LENGTH = 100;
@@ -102,7 +103,7 @@ ${body}
 
 export async function downloadHtml(
   doc: { title: string; content: string },
-  options?: { theme?: 'light' | 'dark' },
+  options?: { theme?: Theme },
 ): Promise<void> {
   const theme = options?.theme ?? 'light';
   const rendered = await renderMarkdown(doc.content);

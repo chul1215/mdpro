@@ -82,6 +82,24 @@ describe('TopBar', () => {
     expect(useUIStore.getState().theme).toBe('dark');
   });
 
+  it('offers Game Boy mode after dark mode', async () => {
+    const user = userEvent.setup();
+    useUIStore.setState({ theme: 'dark' });
+    render(<TopBar />);
+
+    await user.click(screen.getByRole('button', { name: '게임보이 모드로 전환' }));
+    expect(useUIStore.getState().theme).toBe('gameboy');
+  });
+
+  it('returns to light mode after Game Boy mode', async () => {
+    const user = userEvent.setup();
+    useUIStore.setState({ theme: 'gameboy' });
+    render(<TopBar />);
+
+    await user.click(screen.getByRole('button', { name: '라이트 모드로 전환' }));
+    expect(useUIStore.getState().theme).toBe('light');
+  });
+
   it('toggles sidebar via sidebar button', async () => {
     const user = userEvent.setup();
     render(<TopBar />);

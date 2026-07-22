@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-export type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark' | 'gameboy';
 export type ViewMode = 'edit' | 'split' | 'preview';
 export type SidebarTab = 'documents' | 'outline' | 'inbox' | 'addressBook';
 
@@ -47,7 +47,14 @@ export const useUIStore = create<UIState>()(
       splitRatio: 50,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
-        set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+        set((state) => ({
+          theme:
+            state.theme === 'light'
+              ? 'dark'
+              : state.theme === 'dark'
+                ? 'gameboy'
+                : 'light',
+        })),
       setViewMode: (viewMode) => set({ viewMode }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),

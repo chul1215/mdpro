@@ -1,22 +1,43 @@
 // Mermaid는 전체 번들에 수백 KB를 추가하므로 동적 import로 지연 로드한다.
 // 마크다운에 mermaid 코드블록이 포함된 경우에만 호출된다.
 
+import type { Theme } from '../../stores/uiStore';
+
 type MermaidAPI = {
   initialize: (config: Record<string, unknown>) => void;
   render: (id: string, text: string) => Promise<{ svg: string; bindFunctions?: (el: Element) => void }>;
 };
 
 let mermaidPromise: Promise<MermaidAPI> | null = null;
-let currentTheme: 'light' | 'dark' | null = null;
+let currentTheme: Theme | null = null;
 
-async function loadMermaid(theme: 'light' | 'dark'): Promise<MermaidAPI> {
+export function getMermaidThemeConfig(theme: Theme): Record<string, unknown> {
+  if (theme === 'gameboy') {
+    return {
+      theme: 'base',
+      themeVariables: {
+        fontFamily: 'Galmuri11, Noto Sans KR, monospace',
+        background: '#9bbc0f',
+        primaryColor: '#9bbc0f',
+        primaryTextColor: '#0f380f',
+        primaryBorderColor: '#306230',
+        lineColor: '#0f380f',
+        secondaryColor: '#8bac0f',
+        tertiaryColor: '#9bbc0f',
+      },
+    };
+  }
+  return { theme: theme === 'dark' ? 'dark' : 'default' };
+}
+
+async function loadMermaid(theme: Theme): Promise<MermaidAPI> {
   if (mermaidPromise && currentTheme === theme) return mermaidPromise;
   currentTheme = theme;
   mermaidPromise = import('mermaid').then((mod) => {
     const mermaid = mod.default as MermaidAPI;
     mermaid.initialize({
       startOnLoad: false,
-      theme: theme === 'dark' ? 'dark' : 'default',
+      ...getMermaidThemeConfig(theme),
       securityLevel: 'strict',
     });
     return mermaid;
@@ -29,12 +50,12 @@ async function loadMermaid(theme: 'light' | 'dark'): Promise<MermaidAPI> {
  * Mermaid SVG로 치환한다. 실패 시 원본 코드와 에러 메시지를 fallback 렌더.
  *
  * @param container 렌더된 HTML이 주입된 DOM 요소
- * @param theme    'light' | 'dark' — Mermaid 테마 매핑에 사용
+ * @param theme    앱 테마 — Mermaid 테마와 LCD 팔레트 매핑에 사용
  * @param signal   취소 신호 — 프리뷰 재렌더 시 이전 호출 결과 반영 방지
  */
 export async function renderMermaidBlocks(
   container: HTMLElement,
-  theme: 'light' | 'dark',
+  theme: Theme,
   signal?: AbortSignal,
 ): Promise<void> {
   const codeBlocks = Array.from(

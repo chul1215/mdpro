@@ -12,10 +12,12 @@ describe('uiStore', () => {
     });
   });
 
-  it('toggles theme between light and dark', () => {
+  it('cycles through light, dark, and Game Boy themes', () => {
     expect(useUIStore.getState().theme).toBe('light');
     useUIStore.getState().toggleTheme();
     expect(useUIStore.getState().theme).toBe('dark');
+    useUIStore.getState().toggleTheme();
+    expect(useUIStore.getState().theme).toBe('gameboy');
     useUIStore.getState().toggleTheme();
     expect(useUIStore.getState().theme).toBe('light');
   });
@@ -34,9 +36,9 @@ describe('uiStore', () => {
   });
 
   it('persists theme to localStorage', () => {
-    useUIStore.getState().setTheme('dark');
+    useUIStore.getState().setTheme('gameboy');
     const persisted = JSON.parse(localStorage.getItem('mdpro-ui') ?? '{}');
-    expect(persisted.state.theme).toBe('dark');
+    expect(persisted.state.theme).toBe('gameboy');
   });
 
   it('defaults to edit-only view on mobile-width screens', () => {

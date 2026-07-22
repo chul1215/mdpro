@@ -2,6 +2,7 @@ import {
   Columns2,
   FileText,
   Eye,
+  Gamepad2,
   Moon,
   Sun,
   PanelLeft,
@@ -9,7 +10,7 @@ import {
   Type,
   MoreHorizontal,
 } from 'lucide-react';
-import { useUIStore, type ViewMode } from '../../stores/uiStore';
+import { useUIStore, type Theme, type ViewMode } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
 import { FileMenu } from './FileMenu';
 import { calculateStatistics, formatStatisticsSummary } from '../../utils/textStatistics';
@@ -30,6 +31,15 @@ const VIEW_MODES: ViewModeOption[] = [
   { value: 'preview', label: '프리뷰만', icon: Eye },
 ];
 
+const THEME_ACTIONS: Record<
+  Theme,
+  { label: string; title: string; icon: typeof Moon }
+> = {
+  light: { label: '다크 모드로 전환', title: '다크 모드', icon: Moon },
+  dark: { label: '게임보이 모드로 전환', title: '게임보이 모드', icon: Gamepad2 },
+  gameboy: { label: '라이트 모드로 전환', title: '라이트 모드', icon: Sun },
+};
+
 // Apple 스타일 글래스: 라이트/다크 공통으로 translucent dark + backdrop blur.
 // 텍스트 대비를 위해 내용물은 항상 흰색 계열로 유지.
 const GLASS_BG =
@@ -47,6 +57,8 @@ export function TopBar() {
   const user = useAuthStore((s) => s.user);
   const [shareOpen, setShareOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const themeAction = THEME_ACTIONS[theme];
+  const ThemeActionIcon = themeAction.icon;
 
   const stats = useMemo(() => calculateStatistics(content), [content]);
   const summary = useMemo(() => formatStatisticsSummary(stats), [stats]);
@@ -180,8 +192,8 @@ export function TopBar() {
               }}
               className="flex min-h-11 w-full items-center gap-2 px-3 text-left transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/10"
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              {theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              <ThemeActionIcon className="h-4 w-4" />
+              {themeAction.label}
             </button>
           </div>
         ) : null}
@@ -190,11 +202,11 @@ export function TopBar() {
       <button
         type="button"
         onClick={toggleTheme}
-        aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-        title={theme === 'dark' ? '라이트 모드' : '다크 모드'}
+        aria-label={themeAction.label}
+        title={themeAction.title}
         className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:inline-flex sm:h-8 sm:w-8"
       >
-        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        <ThemeActionIcon className="h-4 w-4" />
       </button>
 
       <ShareDocumentDialog

@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('./assets/fonts/Galmuri11.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('./assets/fonts/Galmuri11-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 html,
 body,
 #root {
@@ -123,4 +139,316 @@ html.dark .hljs-addition {
 html.dark .hljs-deletion {
   color: #ffdcd7;
   background-color: #67060c;
+}
+
+/* Nintendo Game Boy DMG의 4단계 LCD 팔레트를 재해석한 픽셀 테마. */
+html.gameboy {
+  color-scheme: light;
+  --gb-ink: #0f380f;
+  --gb-shadow: #306230;
+  --gb-mid: #8bac0f;
+  --gb-screen: #9bbc0f;
+}
+
+html.gameboy body {
+  background-color: #8bac0f;
+  color: #0f380f;
+  letter-spacing: 0;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html.gameboy body,
+html.gameboy button,
+html.gameboy input,
+html.gameboy select,
+html.gameboy textarea,
+html.gameboy code,
+html.gameboy pre,
+html.gameboy h1,
+html.gameboy h2,
+html.gameboy h3,
+html.gameboy h4,
+html.gameboy h5,
+html.gameboy h6 {
+  font-family: 'Galmuri11', 'Noto Sans KR', monospace !important;
+  letter-spacing: 0 !important;
+}
+
+html.gameboy #root * {
+  border-radius: 0 !important;
+  transition-timing-function: steps(2, end) !important;
+}
+
+html.gameboy body::after {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(15, 56, 15, 0.05) 0,
+    rgba(15, 56, 15, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+html.gameboy #root > div {
+  background-color: #8bac0f !important;
+  color: #0f380f !important;
+}
+
+html.gameboy header[role='banner'] {
+  border-bottom: 4px solid #306230;
+  background: #0f380f !important;
+  color: #9bbc0f !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+html.gameboy header[role='banner'] *,
+html.gameboy [role='toolbar'] * {
+  color: #9bbc0f !important;
+}
+
+html.gameboy header[role='banner'] input {
+  border-bottom: 2px solid #8bac0f;
+  background: transparent !important;
+  color: #9bbc0f !important;
+}
+
+html.gameboy header[role='banner'] input::placeholder {
+  color: #8bac0f !important;
+}
+
+html.gameboy header [aria-checked='true'] {
+  background: #9bbc0f !important;
+  color: #0f380f !important;
+  box-shadow: inset -3px -3px 0 #8bac0f !important;
+}
+
+html.gameboy header [aria-checked='true'] * {
+  color: #0f380f !important;
+}
+
+html.gameboy header [role='radiogroup'] {
+  background: #0f380f !important;
+}
+
+html.gameboy [role='toolbar'] {
+  border-bottom: 3px solid #0f380f;
+  background: #306230 !important;
+  color: #9bbc0f !important;
+  box-shadow: none !important;
+}
+
+html.gameboy [role='toolbar'] button:hover,
+html.gameboy [role='toolbar'] button[aria-pressed='true'] {
+  background: #9bbc0f !important;
+  color: #0f380f !important;
+}
+
+html.gameboy [role='toolbar'] button:hover *,
+html.gameboy [role='toolbar'] button[aria-pressed='true'] * {
+  color: #0f380f !important;
+}
+
+html.gameboy aside[role='navigation'],
+html.gameboy main,
+html.gameboy main > section,
+html.gameboy [role='tabpanel'] {
+  border-color: #306230 !important;
+  background-color: #9bbc0f !important;
+  color: #0f380f !important;
+  box-shadow: none !important;
+}
+
+html.gameboy aside[role='navigation'] {
+  border-right: 4px solid #306230 !important;
+}
+
+html.gameboy aside [role='tab'] {
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 2px;
+  border-color: transparent !important;
+  color: #0f380f !important;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+html.gameboy aside [role='tab'][aria-selected='true'] {
+  border-bottom: 4px solid #0f380f !important;
+  background: #8bac0f !important;
+  color: #0f380f !important;
+}
+
+html.gameboy aside [role='tab'] * {
+  color: #0f380f !important;
+}
+
+html.gameboy main > section + section {
+  border-left: 2px solid #306230;
+}
+
+html.gameboy [role='separator'] {
+  background: #306230 !important;
+}
+
+html.gameboy [role='separator'] > span {
+  background: #9bbc0f !important;
+}
+
+html.gameboy [class~='bg-white'],
+html.gameboy [class~='bg-apple-bg'],
+html.gameboy [class~='bg-black'],
+html.gameboy [class~='bg-surface-1'],
+html.gameboy [class~='bg-surface-5'],
+html.gameboy [class~='bg-white/95'] {
+  background-color: #9bbc0f !important;
+  color: #0f380f !important;
+}
+
+html.gameboy [class~='bg-blue-500'],
+html.gameboy [aria-current='true'],
+html.gameboy button[type='submit'] {
+  border-color: #0f380f !important;
+  background-color: #0f380f !important;
+  color: #9bbc0f !important;
+  box-shadow: inset -3px -3px 0 #306230 !important;
+}
+
+html.gameboy [class~='text-apple-ink'],
+html.gameboy [class*='text-apple-ink/'],
+html.gameboy [class~='text-black'] {
+  color: #0f380f !important;
+}
+
+html.gameboy [class~='text-white'],
+html.gameboy [class*='text-white/'] {
+  color: #9bbc0f !important;
+}
+
+html.gameboy button,
+html.gameboy input,
+html.gameboy select,
+html.gameboy textarea {
+  border-color: #306230;
+  box-shadow: none;
+}
+
+html.gameboy aside button:hover,
+html.gameboy [role='menu'] button:hover,
+html.gameboy [role='dialog'] button:hover {
+  background-color: #8bac0f !important;
+  color: #0f380f !important;
+}
+
+html.gameboy input,
+html.gameboy select,
+html.gameboy textarea {
+  border: 2px solid #306230 !important;
+  background-color: #9bbc0f !important;
+  color: #0f380f !important;
+}
+
+html.gameboy input::placeholder,
+html.gameboy textarea::placeholder {
+  color: #0f380f !important;
+  opacity: 0.72;
+}
+
+html.gameboy [role='menu'],
+html.gameboy [role='dialog'] {
+  border: 3px solid #0f380f !important;
+  background: #9bbc0f !important;
+  color: #0f380f !important;
+  box-shadow: 5px 5px 0 #306230 !important;
+  backdrop-filter: none !important;
+}
+
+html.gameboy [role='menu'] *,
+html.gameboy [role='dialog'] * {
+  color: #0f380f !important;
+}
+
+html.gameboy img[alt='Roomi 마스코트'] {
+  border: 2px solid #8bac0f;
+  background: #9bbc0f !important;
+  filter: grayscale(1) sepia(1) hue-rotate(32deg) saturate(3) contrast(1.15);
+  image-rendering: pixelated;
+}
+
+html.gameboy .prose,
+html.gameboy .prose :where(p, li, h1, h2, h3, h4, h5, h6, strong, em) {
+  color: #0f380f !important;
+}
+
+html.gameboy .prose a {
+  color: #0f380f !important;
+  text-decoration-thickness: 2px;
+}
+
+html.gameboy .prose blockquote {
+  border-left: 4px solid #306230 !important;
+  color: #0f380f !important;
+}
+
+html.gameboy .prose :where(table, th, td, hr) {
+  border-color: #306230 !important;
+}
+
+html.gameboy pre,
+html.gameboy code,
+html.gameboy pre code.hljs,
+html.gameboy code.hljs {
+  background: #306230 !important;
+  color: #9bbc0f !important;
+}
+
+html.gameboy .hljs-comment,
+html.gameboy .hljs-quote {
+  color: #8bac0f !important;
+}
+
+html.gameboy .hljs-keyword,
+html.gameboy .hljs-title,
+html.gameboy .hljs-string,
+html.gameboy .hljs-number,
+html.gameboy .hljs-literal,
+html.gameboy .hljs-built_in {
+  color: #9bbc0f !important;
+}
+
+html.gameboy :focus-visible {
+  outline: 3px solid #0f380f;
+  outline-offset: 2px;
+}
+
+html.gameboy ::selection {
+  background: #306230;
+  color: #9bbc0f;
+}
+
+html.gameboy input[type='checkbox'] {
+  accent-color: #0f380f;
+}
+
+/* 픽셀 테마는 전환 중간색을 만들지 않는다. LCD 팔레트가 즉시 스냅되도록 고정한다. */
+html.gameboy #root *,
+html.gameboy #root *::before,
+html.gameboy #root *::after {
+  transition-duration: 0ms !important;
+}
+
+html.gameboy [role='toolbar'][data-overflow-hint='true'] {
+  background: #0f380f !important;
+  color: #9bbc0f !important;
+}
+
+html.gameboy [role='toolbar'][data-overflow-hint='true']::after {
+  background-image: linear-gradient(to left, #0f380f, transparent) !important;
 }

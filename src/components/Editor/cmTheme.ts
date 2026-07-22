@@ -1,5 +1,6 @@
 import { EditorView, Decoration, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { RangeSet, RangeSetBuilder } from '@codemirror/state';
+import type { Theme } from '../../stores/uiStore';
 
 export type FocusModeConfig = {
   enabled: boolean;
@@ -150,3 +151,50 @@ export const darkTheme = EditorView.theme(
   },
   { dark: true }
 );
+
+export const gameBoyTheme = EditorView.theme(
+  {
+    '&': {
+      backgroundColor: '#9bbc0f',
+      color: '#0f380f',
+      height: '100%',
+    },
+    '.cm-scroller': {
+      fontFamily: '"Galmuri11", "Noto Sans KR", monospace',
+      fontSize: '14px',
+      lineHeight: '1.8',
+    },
+    '.cm-content': { padding: '16px 0', caretColor: '#0f380f' },
+    '.cm-gutters': {
+      backgroundColor: '#8bac0f',
+      color: '#0f380f',
+      borderRight: '2px solid #306230',
+    },
+    '.cm-activeLine': { backgroundColor: '#8bac0f' },
+    '.cm-activeLineGutter': {
+      backgroundColor: '#306230',
+      color: '#9bbc0f',
+    },
+    '.cm-cursor': { borderLeftColor: '#0f380f', borderLeftWidth: '3px' },
+    '.cm-selectionBackground, ::selection': {
+      backgroundColor: 'rgba(48, 98, 48, 0.35)',
+    },
+    '&.cm-focused .cm-selectionBackground': {
+      backgroundColor: 'rgba(48, 98, 48, 0.48)',
+    },
+    '.cm-focus-mode-current-line': {
+      backgroundColor: '#8bac0f',
+    },
+    '.cm-focus-mode-dimmed-line': {
+      opacity: '0.45',
+      transition: 'opacity 0.1s steps(2, end)',
+    },
+  },
+  { dark: false }
+);
+
+export function getCodeMirrorTheme(theme: Theme) {
+  if (theme === 'dark') return darkTheme;
+  if (theme === 'gameboy') return gameBoyTheme;
+  return lightTheme;
+}
