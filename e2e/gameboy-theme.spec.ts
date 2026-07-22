@@ -91,6 +91,58 @@ test.describe('Game Boy 테마', () => {
     await expect(page.getByRole('button', { name: '모바일 더보기 메뉴' })).toBeVisible();
   });
 
+  test('Game Boy 모바일 메뉴와 문서 보내기 모달의 글자가 배경과 구분된다', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 812 });
+    await page.goto('/');
+    await enableGameBoyTheme(page);
+
+    await page.getByRole('button', { name: '모바일 더보기 메뉴' }).click();
+    const menu = page.getByRole('menu', { name: '모바일 작업 메뉴' });
+    const menuBox = await menu.boundingBox();
+    expect(menuBox).not.toBeNull();
+    expect(menuBox!.x).toBeGreaterThanOrEqual(8);
+    expect(menuBox!.x + menuBox!.width).toBeLessThanOrEqual(312);
+    const menuColors = await menu.locator('button').evaluateAll((buttons) => buttons.map((button) => ({
+      foreground: getComputedStyle(button).color,
+      background: getComputedStyle(button.closest('[role="menu"]')!).backgroundColor,
+    })));
+    expect(menuColors.every(({ foreground, background }) => contrastRatio(foreground, background) >= 4.5)).toBe(true);
+
+    const trigger = page.getByRole('button', { name: '모바일 더보기 메뉴' });
+    await trigger.click();
+    await page.setViewportSize({ width: 430, height: 812 });
+    await trigger.click();
+    const wideMenuBox = await menu.boundingBox();
+    expect(wideMenuBox).not.toBeNull();
+    expect(wideMenuBox!.x).toBeGreaterThanOrEqual(8);
+    expect(wideMenuBox!.x + wideMenuBox!.width).toBeLessThanOrEqual(422);
+    await trigger.click();
+    await page.setViewportSize({ width: 320, height: 812 });
+    await trigger.click();
+
+    await menu.getByRole('menuitem', { name: '문서 보내기' }).click();
+    const dialog = page.getByRole('dialog', { name: '문서 보내기' });
+    const dialogColors = await dialog.locator('h2, p, button').evaluateAll((elements) => elements.map((element) => ({
+      foreground: getComputedStyle(element).color,
+      background: getComputedStyle(element.closest('[role="dialog"]')!).backgroundColor,
+    })));
+    expect(dialogColors.every(({ foreground, background }) => contrastRatio(foreground, background) >= 4.5)).toBe(true);
+
+    const inputColors = await dialog.evaluate((element) => {
+      const input = document.createElement('input');
+      input.placeholder = 'friend@gmail.com';
+      element.append(input);
+      const background = getComputedStyle(element).backgroundColor;
+      return {
+        text: getComputedStyle(input).color,
+        placeholder: getComputedStyle(input, '::placeholder').color,
+        background,
+      };
+    });
+    expect(contrastRatio(inputColors.text, inputColors.background)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(inputColors.placeholder, inputColors.background)).toBeGreaterThanOrEqual(4.5);
+  });
+
   test('Game Boy 테마가 WCAG AA 자동 감사에 통과한다', async ({ page }) => {
     await page.goto('/');
     await enableGameBoyTheme(page);

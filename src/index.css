@@ -210,18 +210,17 @@ html.gameboy header[role='banner'] {
   box-shadow: none !important;
 }
 
-html.gameboy header[role='banner'] *,
 html.gameboy [role='toolbar'] * {
   color: #9bbc0f !important;
 }
 
-html.gameboy header[role='banner'] input {
+html.gameboy header[role='banner'] input[aria-label='문서 제목'] {
   border-bottom: 2px solid #8bac0f;
   background: transparent !important;
   color: #9bbc0f !important;
 }
 
-html.gameboy header[role='banner'] input::placeholder {
+html.gameboy header[role='banner'] input[aria-label='문서 제목']::placeholder {
   color: #8bac0f !important;
 }
 
@@ -364,7 +363,7 @@ html.gameboy textarea::placeholder {
   opacity: 1;
 }
 
-html.gameboy header[role='banner'] input::placeholder {
+html.gameboy header[role='banner'] input[aria-label='문서 제목']::placeholder {
   color: #9bbc0f !important;
   opacity: 1;
 }

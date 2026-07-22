@@ -14,7 +14,7 @@ import { useUIStore, type Theme, type ViewMode } from '../../stores/uiStore';
 import { useDocumentStore } from '../../stores/documentStore';
 import { FileMenu } from './FileMenu';
 import { calculateStatistics, formatStatisticsSummary } from '../../utils/textStatistics';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { AccountMenu } from '../Auth/AccountMenu';
 import { ShareDocumentDialog } from '../Sharing/ShareDocumentDialog';
 import { useAuthStore } from '../../stores/authStore';
@@ -57,6 +57,8 @@ export function TopBar() {
   const user = useAuthStore((s) => s.user);
   const [shareOpen, setShareOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const [mobileMenuPosition, setMobileMenuPosition] = useState({ top: 0, left: 8 });
   const themeAction = THEME_ACTIONS[theme];
   const ThemeActionIcon = themeAction.icon;
 
@@ -156,11 +158,30 @@ export function TopBar() {
 
       <div className="relative shrink-0 sm:hidden">
         <button
+          ref={mobileMenuTriggerRef}
           type="button"
           aria-label="모바일 더보기 메뉴"
           aria-haspopup="menu"
           aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((open) => !open)}
+          onClick={() => {
+            if (mobileMenuOpen) {
+              setMobileMenuOpen(false);
+              return;
+            }
+            const trigger = mobileMenuTriggerRef.current?.getBoundingClientRect();
+            if (trigger) {
+              const viewportMargin = 8;
+              const menuWidth = 184;
+              setMobileMenuPosition({
+                top: trigger.bottom + viewportMargin,
+                left: Math.min(
+                  Math.max(trigger.left, viewportMargin),
+                  Math.max(viewportMargin, window.innerWidth - menuWidth - viewportMargin),
+                ),
+              });
+            }
+            setMobileMenuOpen(true);
+          }}
           className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -169,7 +190,8 @@ export function TopBar() {
           <div
             role="menu"
             aria-label="모바일 작업 메뉴"
-            className="absolute right-0 top-full z-50 mt-2 min-w-44 overflow-hidden rounded-xl bg-white/95 py-1 text-sm text-apple-ink shadow-apple ring-1 ring-black/5 backdrop-blur-glass dark:bg-surface-1/95 dark:text-white dark:ring-white/10"
+            style={mobileMenuPosition}
+            className="fixed z-50 min-w-44 overflow-hidden rounded-xl bg-white/95 py-1 text-sm text-apple-ink shadow-apple ring-1 ring-black/5 backdrop-blur-glass dark:bg-surface-1/95 dark:text-white dark:ring-white/10"
           >
             <button
               type="button"
