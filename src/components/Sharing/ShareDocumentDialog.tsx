@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import type { AppUser } from '../../lib/auth/authService';
 import { useAddressBookStore } from '../../stores/addressBookStore';
 import { useDocumentStore } from '../../stores/documentStore';
@@ -53,7 +54,7 @@ export function ShareDocumentDialog({ open, user, onClose }: ShareDocumentDialog
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm" role="presentation">
       <div role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" className="w-full max-w-md rounded-2xl bg-white p-5 text-apple-ink shadow-apple-lg dark:bg-surface-4 dark:text-white">
         <div className="mb-4">
@@ -150,6 +151,7 @@ export function ShareDocumentDialog({ open, user, onClose }: ShareDocumentDialog
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

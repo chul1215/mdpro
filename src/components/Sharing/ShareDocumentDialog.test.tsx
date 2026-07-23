@@ -36,6 +36,18 @@ describe('ShareDocumentDialog', () => {
     mockAddressBook = { contacts: [], upsertContact };
   });
 
+  it('renders outside a transformed header so fixed positioning uses the viewport', () => {
+    render(
+      <header data-testid="host-header">
+        <ShareDocumentDialog open onClose={vi.fn()} user={null} />
+      </header>,
+    );
+
+    expect(screen.getByTestId('host-header')).not.toContainElement(
+      screen.getByRole('dialog', { name: '문서 보내기' }),
+    );
+  });
+
   it('requires login before sending', () => {
     render(<ShareDocumentDialog open onClose={vi.fn()} user={null} />);
 
