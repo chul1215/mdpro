@@ -37,6 +37,8 @@ describe('ConfirmDialog', () => {
     expect(dialog).toHaveAttribute('aria-modal', 'true');
     expect(screen.getByText('삭제')).toBeInTheDocument();
     expect(screen.getByText('정말 삭제하시겠습니까?')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-dialog-backdrop')).toHaveClass('items-end', 'md:items-center');
+    expect(dialog).toHaveClass('rounded-t-[28px]', 'md:rounded-xl');
   });
 
   it('shows default confirm label 확인 when not provided', () => {

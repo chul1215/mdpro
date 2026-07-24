@@ -53,12 +53,18 @@ describe('ShareDocumentDialog', () => {
 
     expect(screen.getByText(/Google 로그인 후 문서를 보낼 수 있습니다/)).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: '받는 사람 이메일' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '닫기' })).toHaveClass('min-h-11');
   });
 
   it('sends the active document to a recipient email', async () => {
     const onClose = vi.fn();
     const user = { uid: 'uid-1', email: 'user@example.com', displayName: null, photoURL: null };
     render(<ShareDocumentDialog open onClose={onClose} user={user} />);
+
+    expect(screen.getByRole('textbox', { name: '받는 사람 이름' })).toHaveClass('min-h-11');
+    expect(screen.getByRole('textbox', { name: '받는 사람 이메일' })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: '취소' })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: '보내기' })).toHaveClass('min-h-11');
 
     await userEvent.type(screen.getByRole('textbox', { name: '받는 사람 이메일' }), 'friend@example.com');
     await userEvent.click(screen.getByRole('button', { name: '보내기' }));

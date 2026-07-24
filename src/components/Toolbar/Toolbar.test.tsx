@@ -131,7 +131,7 @@ describe('Toolbar', () => {
 
     const toolbar = screen.getByRole('toolbar', { name: '서식 도구' });
     expect(toolbar).toHaveAttribute('data-overflow-hint', 'true');
-    expect(screen.getByRole('button', { name: '굵게' })).toHaveClass('h-11', 'w-11');
-    expect(screen.getByRole('button', { name: '포커스 모드 켜기' })).toHaveClass('h-11', 'w-11');
+    expect(screen.getByRole('button', { name: '굵게' })).toHaveClass('h-12', 'w-12');
+    expect(screen.getByRole('button', { name: '포커스 모드 켜기' })).toHaveClass('h-12', 'w-12');
   });
 });

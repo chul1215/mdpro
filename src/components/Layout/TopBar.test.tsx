@@ -55,6 +55,7 @@ describe('TopBar', () => {
     render(<TopBar />);
     const group = screen.getByRole('radiogroup', { name: '뷰 모드' });
     expect(group).toBeInTheDocument();
+    expect(group).toHaveClass('hidden', 'md:flex');
     expect(screen.getByRole('radio', { name: '편집만' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: '분할' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: '프리뷰만' })).toBeInTheDocument();
@@ -134,7 +135,7 @@ describe('TopBar', () => {
     render(<TopBar />);
 
     expect(screen.getByRole('button', { name: '사이드바 토글' })).toHaveClass('h-11', 'w-11');
-    expect(screen.getByRole('radio', { name: '편집만' })).toHaveClass('h-11', 'min-w-11');
+    expect(screen.getByRole('radio', { name: '편집만' })).toHaveClass('md:h-8', 'md:min-w-8');
   });
 
   it('adds mobile safe-area top padding so the header is not covered in portrait browsers', () => {

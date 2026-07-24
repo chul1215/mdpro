@@ -24,6 +24,7 @@ describe('DropdownMenu', () => {
     const trigger = screen.getByRole('button', { name: '파일 메뉴' });
     expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveClass('h-11', 'w-11', 'md:h-8', 'md:w-8');
   });
 
   it('opens menu on trigger click and sets aria-expanded=true', async () => {

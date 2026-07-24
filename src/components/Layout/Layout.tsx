@@ -16,6 +16,7 @@ import { EditorPane } from './EditorPane';
 import { PreviewPane } from './PreviewPane';
 import { Toolbar } from '../Toolbar/Toolbar';
 import { DropOverlay } from './DropOverlay';
+import { MobileViewTabs } from './MobileViewTabs';
 
 const DIVIDER_WIDTH = 12;
 const KEYBOARD_STEP = 5;
@@ -32,7 +33,9 @@ export function Layout() {
   const draggingRef = useRef(false);
   const previousBodyStyleRef = useRef({ cursor: '', userSelect: '' });
   const chromeRef = useRef<HTMLDivElement>(null);
+  const mobileTabsRef = useRef<HTMLDivElement>(null);
   const [mobileChromeHeight, setMobileChromeHeight] = useState(0);
+  const [mobileTabsHeight, setMobileTabsHeight] = useState(62);
 
   useLayoutEffect(() => {
     const chrome = chromeRef.current;
@@ -42,6 +45,17 @@ export function Layout() {
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(updateHeight);
     observer.observe(chrome);
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const tabs = mobileTabsRef.current;
+    if (!tabs) return;
+    const updateHeight = () => setMobileTabsHeight(tabs.getBoundingClientRect().height);
+    updateHeight();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(tabs);
     return () => observer.disconnect();
   }, []);
 
@@ -129,7 +143,10 @@ export function Layout() {
   return (
     <div
       className="relative flex h-dvh w-full flex-row overflow-hidden bg-apple-bg text-apple-ink dark:bg-black dark:text-white"
-      style={{ '--mobile-chrome-height': `${mobileChromeHeight}px` } as CSSProperties}
+      style={{
+        '--mobile-chrome-height': `${mobileChromeHeight}px`,
+        '--mobile-tabs-height': `${mobileTabsHeight}px`,
+      } as CSSProperties}
     >
       {sidebarOpen && <Sidebar />}
       <div className="flex min-w-0 flex-1 flex-col">
@@ -183,6 +200,9 @@ export function Layout() {
               />
             )}
           </main>
+        </div>
+        <div ref={mobileTabsRef}>
+          <MobileViewTabs />
         </div>
       </div>
       <DropOverlay />

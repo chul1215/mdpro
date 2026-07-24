@@ -41,6 +41,7 @@ describe('AccountMenu', () => {
     render(<AccountMenu />);
 
     expect(screen.getByText('user@example.com')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '로그아웃' })).toHaveClass('h-11', 'w-11');
     await userEvent.click(screen.getByRole('button', { name: '로그아웃' }));
 
     expect(signOut).toHaveBeenCalled();

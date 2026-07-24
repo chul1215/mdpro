@@ -93,7 +93,7 @@ export function ConfirmDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm md:items-center md:p-4"
       onClick={handleBackdropClick}
       data-testid="confirm-dialog-backdrop"
     >
@@ -103,7 +103,7 @@ export function ConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={messageId}
         onKeyDown={handleDialogKeyDown}
-        className="w-full max-w-sm rounded-xl bg-white shadow-apple ring-1 ring-black/5 dark:bg-surface-1 dark:ring-white/10"
+        className="max-h-[min(90dvh,44rem)] w-full overflow-y-auto rounded-t-[28px] bg-white pb-[env(safe-area-inset-bottom)] shadow-apple ring-1 ring-black/5 md:max-w-sm md:rounded-xl md:pb-0 dark:bg-surface-1 dark:ring-white/10"
       >
         <div className="px-6 pb-4 pt-6">
           <h2
@@ -124,7 +124,7 @@ export function ConfirmDialog({
             ref={cancelRef}
             type="button"
             onClick={onCancel}
-            className="rounded-lg px-4 py-1.5 text-[13px] font-medium text-apple-ink transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white dark:hover:bg-white/10"
+            className="min-h-11 rounded-lg px-4 py-1.5 text-[13px] font-medium text-apple-ink transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white dark:hover:bg-white/10"
           >
             {cancelLabel}
           </button>
@@ -134,7 +134,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             className={
-              'rounded-lg px-4 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
+              'min-h-11 rounded-lg px-4 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
               confirmClass
             }
           >

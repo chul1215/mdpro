@@ -41,7 +41,7 @@ export function AccountMenu() {
         disabled={loading}
         aria-label="로그아웃"
         title="로그아웃"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-7 sm:w-7"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:h-7 md:w-7"
       >
         <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
       </button>

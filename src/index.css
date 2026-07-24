@@ -292,6 +292,22 @@ html.gameboy aside [role='tab'] * {
   color: #0f380f !important;
 }
 
+html.gameboy .mobile-view-tabs {
+  border-top: 4px solid #306230 !important;
+  background: #9bbc0f !important;
+  backdrop-filter: none !important;
+}
+
+html.gameboy .mobile-view-tabs [role='tab'] {
+  color: #0f380f !important;
+}
+
+html.gameboy .mobile-view-tabs [role='tab'][aria-selected='true'] {
+  background: #0f380f !important;
+  color: #9bbc0f !important;
+  box-shadow: inset -3px -3px 0 #306230 !important;
+}
+
 html.gameboy main > section + section {
   border-left: 2px solid #306230;
 }

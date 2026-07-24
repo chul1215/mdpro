@@ -31,8 +31,9 @@ test.describe('모바일 뷰포트 스모크 (375x812)', () => {
     // 모바일에서 mdONE 로고는 md 미만 뷰포트에서 숨김(hidden md:flex). 다른 앵커로 확인.
     await expect(page.getByRole('banner')).toBeVisible();
 
-    // 뷰모드 radio는 모바일에서도 노출
-    await expect(page.getByRole('radiogroup', { name: '뷰 모드' })).toBeVisible();
+    // iOS형 뷰모드 탭바는 모바일 하단에 노출
+    await expect(page.getByRole('tablist', { name: '모바일 뷰 모드' })).toBeVisible();
+    await expect(page.getByRole('radiogroup', { name: '뷰 모드' })).toBeHidden();
 
     // 파일 메뉴 접근 가능
     await page.getByRole('button', { name: '파일 메뉴' }).click();
@@ -53,21 +54,30 @@ test.describe('좁은 화면 레이아웃 충돌 방지', () => {
 
       const banner = page.getByRole('banner');
       const toolbar = page.getByRole('toolbar', { name: '서식 도구' });
+      const mobileTabs = page.getByRole('tablist', { name: '모바일 뷰 모드' });
       await expect(banner).toBeVisible();
       await expect(toolbar).toBeVisible();
+      await expect(mobileTabs).toBeVisible();
 
       const bannerBox = await banner.boundingBox();
       const toolbarBox = await toolbar.boundingBox();
       expect(bannerBox).not.toBeNull();
       expect(toolbarBox).not.toBeNull();
       expect(toolbarBox!.y).toBeGreaterThanOrEqual(bannerBox!.y + bannerBox!.height - 1);
+      expect(bannerBox!.height).toBeLessThanOrEqual(64);
+      expect(toolbarBox!.height).toBe(48);
+
+      const tabsBox = await mobileTabs.boundingBox();
+      const mainBox = await page.locator('main').boundingBox();
+      expect(tabsBox).not.toBeNull();
+      expect(mainBox).not.toBeNull();
+      expect(tabsBox!.height).toBeGreaterThanOrEqual(62);
+      expect(tabsBox!.y + tabsBox!.height).toBeLessThanOrEqual(813);
+      expect(mainBox!.y + mainBox!.height).toBeLessThanOrEqual(tabsBox!.y + 1);
 
       const controls = await visibleBoxes([
         page.getByRole('button', { name: '사이드바 토글' }),
         page.getByRole('textbox', { name: '문서 제목' }),
-        page.getByRole('radio', { name: '편집만' }),
-        page.getByRole('radio', { name: '분할' }),
-        page.getByRole('radio', { name: '프리뷰만' }),
         page.getByRole('button', { name: '파일 메뉴' }),
         page.getByRole('button', { name: /모드로 전환/ }),
       ]);
@@ -112,5 +122,23 @@ test.describe('태블릿 뷰포트 스모크', () => {
     await expect(page.getByRole('heading', { name: 'mdONE' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: '문서 목록', exact: true })).toBeVisible();
     await expect(page.getByRole('textbox', { name: '문서 제목' })).toBeVisible();
+    await expect(page.getByRole('radiogroup', { name: '뷰 모드' })).toBeVisible();
+    await expect(page.getByRole('tablist', { name: '모바일 뷰 모드' })).toBeHidden();
+  });
+});
+
+test.describe('iOS형 모바일 시트', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('문서 보내기 창이 하단 시트로 표시됨', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: '모바일 더보기 메뉴' }).click();
+    await page.getByRole('menuitem', { name: '문서 보내기' }).click();
+
+    const dialog = page.getByRole('dialog', { name: '문서 보내기' });
+    await expect(dialog).toBeVisible();
+    const box = await dialog.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.y + box!.height).toBeGreaterThanOrEqual(843);
   });
 });

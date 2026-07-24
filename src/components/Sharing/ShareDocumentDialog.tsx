@@ -55,8 +55,8 @@ export function ShareDocumentDialog({ open, user, onClose }: ShareDocumentDialog
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm" role="presentation">
-      <div role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" className="w-full max-w-md rounded-2xl bg-white p-5 text-apple-ink shadow-apple-lg dark:bg-surface-4 dark:text-white">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm md:items-center md:px-4" role="presentation">
+      <div role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" className="max-h-[90dvh] w-full overflow-y-auto rounded-t-[28px] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] text-apple-ink shadow-apple-lg md:max-w-md md:rounded-2xl md:pb-5 dark:bg-surface-4 dark:text-white">
         <div className="mb-4">
           <h2 id="share-dialog-title" className="text-base font-semibold">
             문서 보내기
@@ -72,7 +72,7 @@ export function ShareDocumentDialog({ open, user, onClose }: ShareDocumentDialog
               Google 로그인 후 문서를 보낼 수 있습니다.
             </p>
             <div className="flex justify-end">
-              <button type="button" onClick={onClose} className="rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
+              <button type="button" onClick={onClose} className="min-h-11 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
                 닫기
               </button>
             </div>
@@ -111,7 +111,7 @@ export function ShareDocumentDialog({ open, user, onClose }: ShareDocumentDialog
                 value={recipientName}
                 onChange={(event) => setRecipientName(event.target.value)}
                 placeholder="홍길동"
-                className="mt-1 w-full rounded-lg border border-apple-border bg-white px-3 py-2 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-blue-500 dark:border-white/10 dark:bg-surface-5 dark:text-white"
+                className="mt-1 min-h-11 w-full rounded-lg border border-apple-border bg-white px-3 py-2 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-blue-500 dark:border-white/10 dark:bg-surface-5 dark:text-white"
               />
             </label>
             <label className="block text-sm font-medium">
@@ -123,7 +123,7 @@ export function ShareDocumentDialog({ open, user, onClose }: ShareDocumentDialog
                 value={recipientEmail}
                 onChange={(event) => setRecipientEmail(event.target.value)}
                 placeholder="friend@gmail.com"
-                className="mt-1 w-full rounded-lg border border-apple-border bg-white px-3 py-2 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-blue-500 dark:border-white/10 dark:bg-surface-5 dark:text-white"
+                className="mt-1 min-h-11 w-full rounded-lg border border-apple-border bg-white px-3 py-2 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-blue-500 dark:border-white/10 dark:bg-surface-5 dark:text-white"
               />
             </label>
             <label className="flex items-center gap-2 text-sm text-apple-ink/80 dark:text-white/80">
@@ -141,10 +141,10 @@ export function ShareDocumentDialog({ open, user, onClose }: ShareDocumentDialog
               </p>
             ) : null}
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
+              <button type="button" onClick={onClose} className="min-h-11 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
                 취소
               </button>
-              <button type="submit" disabled={loading} className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="submit" disabled={loading} className="min-h-11 rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60">
                 보내기
               </button>
             </div>

@@ -212,14 +212,14 @@ test.describe('Game Boy 테마', () => {
     await page.goto('/');
     await enableGameBoyTheme(page);
     await page.getByRole('button', { name: '사이드바 토글' }).click();
-    const tabs = page.getByRole('tab');
+    const tabs = page.getByRole('tablist', { name: '사이드바 보기' }).getByRole('tab');
     await expect(tabs).toHaveCount(4);
     const metrics = await tabs.evaluateAll((nodes) => nodes.map((node) => {
       const el = node as HTMLElement;
       return { height: el.getBoundingClientRect().height, clipped: el.scrollWidth > el.clientWidth };
     }));
     expect(metrics.every(({ height, clipped }) => height >= 44 && !clipped)).toBe(true);
-    const tablist = page.getByRole('tablist');
+    const tablist = page.getByRole('tablist', { name: '사이드바 보기' });
     expect(await tablist.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   });
 

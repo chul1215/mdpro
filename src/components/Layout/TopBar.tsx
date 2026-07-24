@@ -68,21 +68,21 @@ export function TopBar() {
   return (
     <header
       role="banner"
-      className={`relative z-40 flex min-h-12 shrink-0 flex-wrap items-center gap-2 px-2 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] text-white sm:flex-nowrap sm:gap-3 sm:px-3 sm:py-0 sm:pt-0 ${GLASS_BG}`}
+      className={`relative z-40 flex min-h-12 shrink-0 flex-nowrap items-center gap-1 px-1 pb-1 pt-[calc(env(safe-area-inset-top)+0.5rem)] text-white sm:pt-0 max-md:pt-[calc(env(safe-area-inset-top)+0.5rem)] md:gap-3 md:px-3 md:py-0 md:pt-0 ${GLASS_BG}`}
     >
       <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={toggleSidebar}
           aria-label="사이드바 토글"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:w-8"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:h-8 md:w-8"
         >
           <PanelLeft className="h-4 w-4" />
         </button>
         <img
           src="/roomi-character.webp"
           alt="Roomi 마스코트"
-          className="h-10 w-10 rounded-full bg-white/90 object-cover object-top ring-1 ring-white/30 sm:h-8 sm:w-8"
+          className="hidden h-8 w-8 rounded-full bg-white/90 object-cover object-top ring-1 ring-white/30 md:block"
           loading="eager"
           decoding="async"
         />
@@ -99,7 +99,7 @@ export function TopBar() {
         placeholder="제목 없음"
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="order-2 min-w-0 basis-full rounded-md bg-white/0 px-2 py-1 text-[13px] text-white placeholder:text-white/40 hover:bg-white/10 focus:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:order-none sm:flex-1 sm:basis-auto"
+        className="min-w-0 flex-1 rounded-md bg-white/0 px-1 py-1 text-[13px] text-white placeholder:text-white/40 hover:bg-white/10 focus:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:px-2"
       />
 
       {/* 통계 표시 */}
@@ -115,7 +115,7 @@ export function TopBar() {
       <div
         role="radiogroup"
         aria-label="뷰 모드"
-        className="ml-auto flex shrink-0 items-center gap-0.5 rounded-md bg-white/10 p-0.5 sm:ml-0"
+        className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-md bg-white/10 p-0.5 md:flex md:ml-0"
       >
         {VIEW_MODES.map(({ value, label, icon: Icon }) => {
           const active = viewMode === value;
@@ -129,14 +129,14 @@ export function TopBar() {
               title={label}
               onClick={() => setViewMode(value)}
               className={
-                'flex h-11 min-w-11 items-center justify-center gap-1 rounded-md px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-8 sm:min-w-8 sm:px-2.5 ' +
+                'flex h-11 min-w-11 items-center justify-center gap-1 rounded-md px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:h-8 md:min-w-8 md:px-2.5 ' +
                 (active
                   ? 'bg-white text-black'
                   : 'text-white/70 hover:text-white')
               }
             >
               <Icon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{label}</span>
+              <span className="hidden md:inline">{label}</span>
             </button>
           );
         })}
@@ -149,14 +149,14 @@ export function TopBar() {
         onClick={() => setShareOpen(true)}
         aria-label="문서 보내기"
         title="문서 보내기"
-        className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:inline-flex sm:h-8 sm:w-8"
+        className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:inline-flex sm:max-md:hidden md:inline-flex md:h-8 md:w-8"
       >
         <Send className="h-4 w-4" aria-hidden="true" />
       </button>
 
       <AccountMenu />
 
-      <div className="relative shrink-0 sm:hidden">
+      <div className="relative shrink-0 md:hidden">
         <button
           ref={mobileMenuTriggerRef}
           type="button"
@@ -226,7 +226,7 @@ export function TopBar() {
         onClick={toggleTheme}
         aria-label={themeAction.label}
         title={themeAction.title}
-        className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:inline-flex sm:h-8 sm:w-8"
+        className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:inline-flex sm:max-md:hidden md:inline-flex md:h-8 md:w-8"
       >
         <ThemeActionIcon className="h-4 w-4" />
       </button>

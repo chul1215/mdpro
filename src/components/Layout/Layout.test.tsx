@@ -126,6 +126,23 @@ describe('Layout', () => {
     expect(shell).toHaveClass('overflow-hidden');
   });
 
+  it('renders an iOS-style mobile view tab bar with all three view modes', () => {
+    render(<Layout />);
+
+    const tablist = screen.getByRole('tablist', { name: '모바일 뷰 모드' });
+    expect(tablist).toHaveClass('md:hidden');
+    expect(screen.getByRole('tab', { name: '편집' })).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('tab', { name: '분할' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: '프리뷰' })).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('changes view mode from the mobile view tab bar', () => {
+    render(<Layout />);
+
+    fireEvent.click(screen.getByRole('tab', { name: '프리뷰' }));
+    expect(useUIStore.getState().viewMode).toBe('preview');
+  });
+
   it('hides preview in edit-only mode', () => {
     useUIStore.setState({ viewMode: 'edit' });
     render(<Layout />);

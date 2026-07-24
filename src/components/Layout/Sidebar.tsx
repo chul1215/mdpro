@@ -178,7 +178,7 @@ function PasscodeDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm md:items-center md:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) handleCancel();
       }}
@@ -188,7 +188,7 @@ function PasscodeDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-xl bg-white p-6 shadow-apple ring-1 ring-black/5 dark:bg-surface-1 dark:ring-white/10"
+        className="max-h-[90dvh] w-full overflow-y-auto rounded-t-[28px] bg-white p-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] shadow-apple ring-1 ring-black/5 md:max-w-sm md:rounded-xl md:pb-6 dark:bg-surface-1 dark:ring-white/10"
       >
         <h2
           id={titleId}
@@ -473,7 +473,7 @@ export function Sidebar() {
         type="button"
         aria-label="사이드바 닫기"
         onClick={() => setSidebarOpen(false)}
-        className="absolute inset-x-0 bottom-0 top-[var(--mobile-chrome-height)] z-20 bg-black/40 backdrop-blur-sm md:hidden"
+        className="absolute inset-x-0 bottom-[var(--mobile-tabs-height)] top-[var(--mobile-chrome-height)] z-20 bg-black/40 backdrop-blur-sm md:hidden"
       />
       <aside
         role="navigation"
@@ -486,13 +486,13 @@ export function Sidebar() {
                 ? '받은 문서함'
                 : '주소록'
         }
-        className="fixed bottom-0 left-0 top-[var(--mobile-chrome-height)] z-50 flex w-[min(18rem,calc(100vw-2rem))] flex-col bg-apple-bg pb-[env(safe-area-inset-bottom)] shadow-apple md:static md:h-full md:w-56 md:shrink-0 md:pb-0 md:shadow-none dark:bg-surface-5"
+        className="fixed bottom-0 left-0 top-[var(--mobile-chrome-height)] z-50 flex w-[min(18rem,calc(100vw-2rem))] flex-col bg-apple-bg pb-[env(safe-area-inset-bottom)] shadow-apple max-md:bottom-[var(--mobile-tabs-height)] md:static md:h-full md:w-56 md:shrink-0 md:pb-0 md:shadow-none dark:bg-surface-5"
       >
         {/* 탭 네비게이션 */}
         <div
           role="tablist"
           aria-label="사이드바 보기"
-          className="flex border-b border-apple-border dark:border-white/10"
+          className="flex min-h-[54px] border-b border-apple-border dark:border-white/10"
         >
           {TABS.map(({ value: tab, label, icon: Icon }) => (
             <button
@@ -502,7 +502,7 @@ export function Sidebar() {
               aria-selected={sidebarTab === tab}
               aria-controls={`${tab}-panel`}
               role="tab"
-              className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1 px-1 py-2 text-[12px] font-medium transition-colors relative ${
+              className={`relative flex min-h-[54px] min-w-0 flex-1 items-center justify-center gap-1 px-1 py-2 text-[12px] font-medium transition-colors md:min-h-11 ${
                 sidebarTab === tab
                   ? 'border-b-2 border-[#005eb8] text-[#005eb8] dark:border-[#6eb4ff] dark:text-[#6eb4ff]'
                   : 'text-apple-ink/70 hover:text-apple-ink dark:text-white/70 dark:hover:text-white'
@@ -534,7 +534,7 @@ export function Sidebar() {
                   type="button"
                   onClick={handleCreate}
                   aria-label="새 문서"
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   <FilePlus className="h-4 w-4" aria-hidden="true" />
                   <span>새 문서</span>
@@ -543,7 +543,7 @@ export function Sidebar() {
                   <button
                     type="button"
                     onClick={handleCreateFolder}
-                    className="inline-flex items-center justify-center gap-1 rounded-lg border border-apple-border px-2 py-1.5 text-[12px] font-medium text-apple-ink hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
+                    className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-apple-border px-2 py-1.5 text-[12px] font-medium text-apple-ink hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
                   >
                     <FolderPlus className="h-3.5 w-3.5" aria-hidden="true" />
                     폴더
@@ -551,7 +551,7 @@ export function Sidebar() {
                   <button
                     type="button"
                     onClick={handleCreateSecureFolder}
-                    className="inline-flex items-center justify-center gap-1 rounded-lg border border-apple-border px-2 py-1.5 text-[12px] font-medium text-apple-ink hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
+                    className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-apple-border px-2 py-1.5 text-[12px] font-medium text-apple-ink hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
                   >
                     <Shield className="h-3.5 w-3.5" aria-hidden="true" />
                     보안
@@ -580,7 +580,7 @@ export function Sidebar() {
                       void handleDropOnFolder(null);
                     }}
                     aria-current={selectedFolderId === null ? 'true' : undefined}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] ${
+                    className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] md:min-h-0 ${
                       selectedFolderId === null
                         ? 'bg-blue-500 text-white'
                         : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5'
@@ -613,7 +613,7 @@ export function Sidebar() {
                           }}
                           aria-label={locked ? `${folder.name} 잠김` : folder.name}
                           aria-current={selectedFolderId === folder.id ? 'true' : undefined}
-                          className={`inline-flex min-w-0 flex-1 items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-[12px] ${indentClass} ${
+                          className={`inline-flex min-h-11 min-w-0 flex-1 items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-[12px] md:min-h-0 ${indentClass} ${
                             selectedFolderId === folder.id
                               ? 'bg-blue-500 text-white'
                               : 'text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5'
@@ -629,7 +629,7 @@ export function Sidebar() {
                             event.stopPropagation();
                             handleRenameFolder({ id: folder.id, name: folder.name });
                           }}
-                          className="rounded-md p-1 text-apple-ink/50 opacity-80 transition-colors hover:bg-black/10 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-blue-400 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-md text-apple-ink/50 opacity-80 transition-colors hover:bg-black/10 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-blue-400 md:h-auto md:w-auto md:p-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
                         >
                           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
@@ -644,7 +644,7 @@ export function Sidebar() {
                               locked: folder.locked,
                             });
                           }}
-                          className="rounded-md p-1 text-apple-ink/50 opacity-80 transition-colors hover:bg-black/10 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-red-400 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-apple-ink/50 opacity-80 transition-colors hover:bg-black/10 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-red-400 md:h-auto md:w-auto md:p-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
                         >
                           <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
@@ -663,12 +663,12 @@ export function Sidebar() {
                       const active = doc.id === activeId;
                       const displayTitle = doc.title.trim() || '제목 없음';
                       const itemClass = active
-                        ? 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pl-8 pr-14 text-left text-[13px] bg-blue-500 text-white'
-                        : 'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1 pl-8 pr-14 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5';
+                        ? 'flex h-11 w-full items-center gap-2 rounded-lg px-2.5 py-1 pl-8 pr-14 text-left text-[13px] bg-blue-500 text-white md:h-9'
+                        : 'flex h-11 w-full items-center gap-2 rounded-lg px-2.5 py-1 pl-8 pr-14 text-left text-[13px] text-apple-ink hover:bg-black/5 dark:text-white dark:hover:bg-white/5 md:h-9';
                       return (
                         <li key={doc.id}>
                           <div
-                            className="group relative h-9"
+                            className="group relative h-9 max-md:h-11"
                             data-testid={`document-row-${doc.id}`}
                             draggable
                             onDragStart={() => setDragItem({ type: 'document', id: doc.id })}
@@ -720,7 +720,7 @@ export function Sidebar() {
                               className={
                                 'absolute right-7 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md border px-0 text-[10px] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
                                 (active
-                                  ? 'border-white/60 bg-[#005eb8] text-white opacity-100'
+                                  ? 'border-white/70 bg-[#00427f] text-white opacity-100'
                                   : 'border-apple-border bg-white text-apple-ink opacity-70 hover:opacity-100 dark:border-white/10 dark:bg-surface-4 dark:text-white md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100')
                               }
                             >
