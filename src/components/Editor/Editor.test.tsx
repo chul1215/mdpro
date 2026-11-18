@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { undo } from '@codemirror/commands';
 import { Editor } from './Editor';
@@ -60,6 +60,70 @@ describe('Editor', () => {
     });
     expect(view.state.doc.toString()).toContain('B 문서');
     expect(view.state.doc.toString()).not.toContain('A 문서');
+  });
+
+  it('indents selected lines with Tab and outdents them with Shift+Tab', () => {
+    useDocumentStore.setState({ content: '첫 줄\n둘째 줄' });
+    render(<Editor />);
+    const view = useEditorStore.getState().view;
+    if (!view) throw new Error('view missing');
+
+    act(() => {
+      view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
+      fireEvent.keyDown(view.contentDOM, { key: 'Tab' });
+    });
+    expect(view.state.doc.toString()).toBe('  첫 줄\n  둘째 줄');
+
+    act(() => {
+      fireEvent.keyDown(view.contentDOM, { key: 'Tab', shiftKey: true });
+    });
+    expect(view.state.doc.toString()).toBe('첫 줄\n둘째 줄');
+  });
+
+  it('continues an indented Markdown list with Enter and exits one level on an empty item', () => {
+    useDocumentStore.setState({ content: '- 상위\n  - 하위' });
+    render(<Editor />);
+    const view = useEditorStore.getState().view;
+    if (!view) throw new Error('view missing');
+
+    act(() => {
+      view.dispatch({ selection: { anchor: view.state.doc.length } });
+      fireEvent.keyDown(view.contentDOM, { key: 'Enter' });
+    });
+    expect(view.state.doc.toString()).toBe('- 상위\n  - 하위\n  - ');
+
+    act(() => {
+      fireEvent.keyDown(view.contentDOM, { key: 'Enter' });
+    });
+    expect(view.state.doc.toString()).toBe('- 상위\n  - 하위\n- ');
+  });
+
+  it('moves an empty nested Markdown item outward with Backspace', () => {
+    useDocumentStore.setState({ content: '- 상위\n  - ' });
+    render(<Editor />);
+    const view = useEditorStore.getState().view;
+    if (!view) throw new Error('view missing');
+
+    act(() => {
+      view.dispatch({ selection: { anchor: view.state.doc.length } });
+      fireEvent.keyDown(view.contentDOM, { key: 'Backspace' });
+    });
+
+    expect(view.state.doc.toString()).toBe('- 상위\n- ');
+  });
+
+  it('exits a top-level empty task list item with Enter', () => {
+    useDocumentStore.setState({ content: '- [ ] ' });
+    render(<Editor />);
+    const view = useEditorStore.getState().view;
+    if (!view) throw new Error('view missing');
+
+    act(() => {
+      view.dispatch({ selection: { anchor: view.state.doc.length } });
+      fireEvent.keyDown(view.contentDOM, { key: 'Enter' });
+    });
+
+    expect(view.state.doc.toString()).toBe('');
   });
 
   it('toggles focus mode decorations without remounting the editor', () => {

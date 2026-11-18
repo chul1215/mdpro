@@ -1,15 +1,21 @@
 import { useEffect, useRef } from 'react';
-import { EditorState, Compartment, type Extension } from '@codemirror/state';
+import { EditorState, Compartment, Prec, type Extension } from '@codemirror/state';
 import {
   EditorView,
   keymap,
   lineNumbers,
   highlightActiveLine,
   highlightActiveLineGutter,
+  type Command,
 } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import {
+  deleteMarkupBackward,
+  insertNewlineContinueMarkup,
+  markdown,
+  markdownLanguage,
+} from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { useDocumentStore } from '../../stores/documentStore';
 import { useUIStore, type Theme } from '../../stores/uiStore';
@@ -29,6 +35,40 @@ function focusExtension(focusConfig: FocusModeConfig): Extension {
   return focusConfig.enabled ? focusModePlugin(focusConfig) : [];
 }
 
+const emptyMarkdownItem = /^([ \t]*)((?:[-+*]|\d+[.)])(?:[ \t]+\[[ xX]\])?)[ \t]*$/;
+
+const outdentEmptyMarkdownItem: Command = (view) => {
+  const { state } = view;
+  const range = state.selection.main;
+  if (!range.empty) return false;
+
+  const line = state.doc.lineAt(range.head);
+  if (range.head !== line.to) return false;
+
+  const match = emptyMarkdownItem.exec(line.text);
+  if (!match) return false;
+
+  const [, indent, marker] = match;
+  const nextIndent = indent.endsWith('\t')
+    ? indent.slice(0, -1)
+    : indent.slice(0, Math.max(0, indent.length - 2));
+  const insert = indent.length > 0 ? `${nextIndent}${marker} ` : '';
+
+  view.dispatch({
+    changes: { from: line.from, to: line.to, insert },
+    selection: { anchor: line.from + insert.length },
+    scrollIntoView: true,
+    userEvent: 'input',
+  });
+  return true;
+};
+
+const smartMarkdownEnter: Command = (view) =>
+  outdentEmptyMarkdownItem(view) || insertNewlineContinueMarkup(view);
+
+const smartMarkdownBackspace: Command = (view) =>
+  outdentEmptyMarkdownItem(view) || deleteMarkupBackward(view);
+
 function buildExtensions(
   themeCompartment: Compartment,
   focusCompartment: Compartment,
@@ -42,6 +82,11 @@ function buildExtensions(
     history(),
     bracketMatching(),
     indentOnInput(),
+    Prec.highest(keymap.of([
+      indentWithTab,
+      { key: 'Enter', run: smartMarkdownEnter },
+      { key: 'Backspace', run: smartMarkdownBackspace },
+    ])),
     keymap.of([
       {
         key: 'Mod-b',
